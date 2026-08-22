@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type Size = 'sm' | 'md';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
+type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -9,18 +9,20 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 font-medium rounded-md transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2';
+  'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 active:scale-[0.98]';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-canvas hover:bg-accent-strong',
-  secondary: 'bg-surface-raised text-ink border border-border-strong hover:border-accent',
-  ghost: 'text-muted hover:text-ink hover:bg-surface-raised',
-  danger: 'bg-critical-soft text-critical border border-critical/30 hover:bg-critical/10',
+  primary: 'bg-accent-cyan text-white hover:bg-accent-cyan-strong shadow-sm',
+  secondary: 'bg-bg-subtle text-text-primary border border-border-default hover:border-border-hover hover:bg-bg-card-raised',
+  ghost: 'text-text-secondary hover:text-text-primary hover:bg-bg-subtle',
+  danger: 'bg-accent-rose-soft text-accent-rose border border-accent-rose/30 hover:bg-accent-rose/20',
+  success: 'bg-accent-emerald text-white hover:bg-accent-emerald-strong shadow-sm',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'text-xs px-3 py-1.5',
-  md: 'text-sm px-4 py-2.5',
+  sm: 'text-xs px-3 py-1.5 font-mono',
+  md: 'text-sm px-4 py-2',
+  lg: 'text-base px-5 py-2.5',
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
