@@ -1374,19 +1374,37 @@ async def generate_and_verify_fix(payload: FixRequest, user: CurrentUser = Depen
     except Exception as exc:
         logger.warning("mongo_update_fix_status_failed", error=str(exc))
 
-    # RAG memory: record this fix outcome (regardless of resolved/needs-review —
-    # a needs-review outcome is still useful prior art: "this approach was tried
-    # for a similar finding and didn't fully resolve it"). Best-effort/never-raises.
-    await memory_store.record_fix_outcome(
-        scan_id=payload.scanId,
-        finding_id=payload.findingId,
-        summary=fix["summary"],
-        verified=resolved,
-        method=method,
-        finding=finding,
-        owner_id=user.id,
-        repo=scan_doc.get("repo"),
-    )
+    # RAG memory: record this fix outcome regardless of resolved/needs-review.
+    # Even a needs-review outcome is useful prior art — "this strategy was tried
+    # for a similar finding and didn't pass deterministic re-scan", so the next
+    # fix prompt can explicitly avoid it.
+    #
+    # Defence-in-depth: memory_store.record_fix_outcome is documented as
+    # best-effort and catches all exceptions internally, but we wrap the call
+    # site too. A bug at *this* level (e.g. a NameError in the keyword args
+    # before we even enter the function — which is exactly what happened with
+    # the doc/scan_doc typo) would otherwise propagate as a 500 to the caller
+    # even though the real work (GitHub commit + Mongo update) has already
+    # completed. The try/except here ensures that class of bug fails safely:
+    # log a warning, complete the FixResponse, skip the memory write.
+    try:
+        await memory_store.record_fix_outcome(
+            scan_id=payload.scanId,
+            finding_id=payload.findingId,
+            summary=fix["summary"],
+            verified=resolved,
+            method=method,
+            finding=finding,
+            owner_id=user.id,
+            repo=scan_doc.get("repo"),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "memory_record_fix_outcome_call_site_failed",
+            scan_id=payload.scanId,
+            finding_id=payload.findingId,
+            error=str(exc),
+        )
 
     return FixResponse(
         scanId=payload.scanId,
