@@ -92,7 +92,7 @@ export default function LandingPage() {
                   <div className="text-xs text-text-primary font-mono font-bold">SQL Injection in Controller</div>
                   <div className="text-xs text-text-secondary leading-relaxed">Raw string template in db.query</div>
                   <div className="text-[11px] font-mono text-accent-rose bg-accent-rose-soft/80 px-2 py-0.5 rounded inline-block">
-                    − const q = `SELECT * WHERE id = '${'${userId}'}'`
+                    − const q = `SELECT * WHERE id = &apos;${'${userId}'}&apos;`
                   </div>
                 </div>
 
@@ -103,7 +103,7 @@ export default function LandingPage() {
                   <div className="text-xs text-text-primary font-mono font-bold">Parameterized Query</div>
                   <div className="text-xs text-text-secondary leading-relaxed">0 Regressions Certified</div>
                   <div className="text-[11px] font-mono text-accent-emerald bg-accent-emerald-soft/80 px-2 py-0.5 rounded inline-block">
-                    + const q = 'SELECT * WHERE id = $1'
+                    + const q = &apos;SELECT * WHERE id = $1&apos;
                   </div>
                 </div>
               </div>

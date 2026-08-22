@@ -5,28 +5,21 @@ import axios from 'axios';
 
 type Status = 'checking' | 'up' | 'down';
 
-interface ServiceDef {
-  label: string;
-  url: string;
-}
+const SERVICES = [
+  { label: 'auth-service', getUrl: () => `${process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:5000'}/health` },
+  { label: 'main-service', getUrl: () => `${process.env.NEXT_PUBLIC_MAIN_API_URL || 'http://localhost:5001'}/health` },
+];
 
 export default function ServiceStatus() {
-  const authUrl = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:5000';
-  const mainUrl = process.env.NEXT_PUBLIC_MAIN_API_URL || 'http://localhost:5001';
-
-  const services: ServiceDef[] = [
-    { label: 'auth-service', url: `${authUrl}/health` },
-    { label: 'main-service', url: `${mainUrl}/health` },
-  ];
-
-  const [statuses, setStatuses] = useState<Record<string, Status>>(
-    Object.fromEntries(services.map((s) => [s.label, 'checking']))
-  );
+  const [statuses, setStatuses] = useState<Record<string, Status>>({
+    'auth-service': 'checking',
+    'main-service': 'checking',
+  });
 
   useEffect(() => {
-    services.forEach((s) => {
+    SERVICES.forEach((s) => {
       axios
-        .get(s.url, { timeout: 4000 })
+        .get(s.getUrl(), { timeout: 4000 })
         .then(() => setStatuses((prev) => ({ ...prev, [s.label]: 'up' })))
         .catch(() => setStatuses((prev) => ({ ...prev, [s.label]: 'down' })));
     });
@@ -42,7 +35,7 @@ export default function ServiceStatus() {
         <span className="text-[10px] font-normal text-text-secondary">Direct Health Checks</span>
       </div>
       <div className="space-y-2.5">
-        {services.map((s) => (
+        {SERVICES.map((s) => (
           <div key={s.label} className="flex items-center justify-between">
             <span className="text-text-primary font-medium">{s.label}</span>
             <span className={`flex items-center gap-1.5 ${textColor(statuses[s.label])}`}>
