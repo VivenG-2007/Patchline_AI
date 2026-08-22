@@ -1374,6 +1374,9 @@ async def generate_and_verify_fix(payload: FixRequest, user: CurrentUser = Depen
         summary=fix["summary"],
         verified=resolved,
         method=method,
+        finding=finding,
+        owner_id=user.id,
+        repo=doc.get("repo"),
     )
 
     return FixResponse(

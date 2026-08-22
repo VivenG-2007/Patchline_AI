@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-from typing import Any
+from typing import Any, Optional
 
 from app.config import get_settings
 from app.core import chroma_client
@@ -46,11 +46,6 @@ def _doc_id(scan_id: str, finding_id: str) -> str:
 
 
 def _embedding_text(finding: dict) -> str:
-    """What actually gets embedded. Findings on this service don't carry a
-    stored code snippet (see routers/scanner.py: Finding model) — only
-    title/description/category/file/severity — so that's the retrieval
-    signal today. If a snippet or diff becomes available on Finding later,
-    add it here; index_finding/retrieve_similar don't need to change."""
     parts = [
         finding.get("title") or "",
         finding.get("category") or "",
@@ -63,9 +58,7 @@ def _embedding_text(finding: dict) -> str:
 
 async def index_finding(owner_id: str, scan_id: str, repo: str, finding: dict) -> None:
     """Best-effort: embed one finding and upsert it into the Chroma
-    finding_memory collection. Called from _save_scan_metadata
-    (routers/scanner.py), right after a scan is persisted — mirrors
-    es_client.index_scan_findings's call site."""
+    finding_memory collection."""
     if not is_enabled():
         return
     finding_id = finding.get("id")
@@ -85,9 +78,6 @@ async def index_finding(owner_id: str, scan_id: str, repo: str, finding: dict) -
             "file": finding.get("file") or "",
             "embeddingProvider": get_settings().embedding_provider,
             "indexedAt": datetime.datetime.utcnow().isoformat() + "Z",
-            # Flat, queryable flag so retrieve_similar's `where` filter can
-            # exclude findings with no recorded fix yet without fetching
-            # them — set true by record_fix_outcome once one exists.
             "hasFix": False,
         }
         await asyncio.to_thread(
@@ -96,20 +86,23 @@ async def index_finding(owner_id: str, scan_id: str, repo: str, finding: dict) -
             embeddings=[vector],
             metadatas=[metadata],
         )
-    except Exception as exc:  # noqa: BLE001 — indexing must never fail a scan
+    except Exception as exc:  # noqa: BLE001
         logger.warning("memory_index_finding_failed", scan_id=scan_id, finding_id=finding_id, error=str(exc))
 
 
-async def record_fix_outcome(scan_id: str, finding_id: str, summary: str, verified: bool, method: str) -> None:
+async def record_fix_outcome(
+    scan_id: str,
+    finding_id: str,
+    summary: str,
+    verified: bool,
+    method: str,
+    finding: Optional[dict] = None,
+    owner_id: Optional[str] = None,
+    repo: Optional[str] = None,
+) -> None:
     """Best-effort: attach the fix outcome to the finding's memory point once
-    generate_and_verify_fix (routers/scanner.py) finishes. This is what turns
-    stored findings into stored FIXES — retrieve_similar only returns points
-    that have gone through this, so a future similar finding gets "here's
-    what worked last time", not just "here's a similar bug".
-
-    Chroma's item-level metadata update overwrites the whole metadata dict
-    for an id, so the existing metadata is fetched first and merged in
-    Python rather than passing just the fix fields."""
+    generate_and_verify_fix finishes. If the point was not pre-indexed, upsert it directly
+    so Chroma memory is ALWAYS updated."""
     if not is_enabled():
         return
     doc_id = _doc_id(scan_id, finding_id)
@@ -117,30 +110,49 @@ async def record_fix_outcome(scan_id: str, finding_id: str, summary: str, verifi
         collection = await chroma_client.get_collection()
         existing = await asyncio.to_thread(collection.get, ids=[doc_id], include=["metadatas"])
         metadatas = existing.get("metadatas") or []
-        if not metadatas:
-            logger.warning("memory_record_fix_outcome_missing", scan_id=scan_id, finding_id=finding_id)
-            return
-        metadata = dict(metadatas[0])
-        metadata["hasFix"] = True
-        metadata["fixSummary"] = summary
-        metadata["fixVerified"] = verified
-        metadata["fixVerificationMethod"] = method
-        metadata["fixRecordedAt"] = datetime.datetime.utcnow().isoformat() + "Z"
-        await asyncio.to_thread(collection.update, ids=[doc_id], metadatas=[metadata])
+
+        if metadatas and metadatas[0]:
+            metadata = dict(metadatas[0])
+            metadata["hasFix"] = True
+            metadata["fixSummary"] = summary
+            metadata["fixVerified"] = verified
+            metadata["fixVerificationMethod"] = method
+            metadata["fixRecordedAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+            await asyncio.to_thread(collection.update, ids=[doc_id], metadatas=[metadata])
+        else:
+            # Point missing — construct metadata and upsert into Chroma
+            f_dict = finding or {}
+            emb_text = _embedding_text(f_dict) if f_dict else summary
+            vector = await embeddings.embed(emb_text)
+            metadata = {
+                "ownerId": owner_id or "",
+                "scanId": scan_id,
+                "findingId": finding_id,
+                "repo": repo or "",
+                "title": f_dict.get("title") or summary or "Vulnerability Fix",
+                "category": f_dict.get("category") or "",
+                "severity": f_dict.get("severity") or "",
+                "file": f_dict.get("file") or "",
+                "hasFix": True,
+                "fixSummary": summary,
+                "fixVerified": verified,
+                "fixVerificationMethod": method,
+                "fixRecordedAt": datetime.datetime.utcnow().isoformat() + "Z",
+            }
+            await asyncio.to_thread(
+                collection.upsert,
+                ids=[doc_id],
+                embeddings=[vector],
+                metadatas=[metadata],
+            )
+            logger.info("memory_record_fix_outcome_upserted", scan_id=scan_id, finding_id=finding_id)
     except Exception as exc:  # noqa: BLE001
         logger.warning("memory_record_fix_outcome_failed", scan_id=scan_id, finding_id=finding_id, error=str(exc))
 
 
 async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list[dict[str, Any]]:
-    """Semantic retrieval for the fix-generation prompt (see
-    routers/scanner.py: _generate_fix). Only returns memory points that
-    already have a fix attempt recorded (record_fix_outcome) — verified or
-    needs-review both count as prior art ("this worked" is useful, "this was
-    tried and didn't fully resolve it" is too); an unattempted similar
-    finding has nothing to contribute. Each returned item's fixSummary makes
-    clear what was actually done; the caller decides how to use it. Returns
-    [] (never raises) if memory is disabled, empty, or anything fails, so
-    callers can unconditionally splice the result into a prompt."""
+    """Semantic retrieval for the fix-generation prompt. Returns memory points with exact
+    similarity scores computed from ChromaDB vector distance."""
     if not is_enabled():
         return []
     try:
@@ -157,9 +169,7 @@ async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list
         distances = (result.get("distances") or [[]])[0]
         items: list[dict[str, Any]] = []
         for metadata, distance in zip(metadatas, distances):
-            # Collection uses hnsw:space="cosine" (see chroma_client.py), so
-            # Chroma's distance is cosine distance: similarity = 1 - distance.
-            similarity = round(1 - distance, 4)
+            similarity = round(max(0.0, min(1.0, 1.0 - distance)), 4)
             items.append(
                 {
                     "similarity": similarity,
@@ -172,6 +182,6 @@ async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list
                 }
             )
         return items
-    except Exception as exc:  # noqa: BLE001 — retrieval must never block fix generation
+    except Exception as exc:  # noqa: BLE001
         logger.warning("memory_retrieve_similar_failed", owner_id=owner_id, error=str(exc))
         return []

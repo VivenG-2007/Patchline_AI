@@ -419,26 +419,7 @@ function ScannerView() {
                 url: `https://github.com/${repoInput}/pull/42`,
               },
               attempts: (prev[findingId]?.attempts || 1),
-              similarPastFixes: [
-                {
-                  similarity: 0.94,
-                  title: 'Parameterized SQL query substitution in handler',
-                  category: 'SQL Injection',
-                  severity: 'CRITICAL',
-                  file: 'src/controllers/auth.js',
-                  fixSummary: 'Replaced template literal string interpolation with prepared statement parameter $1.',
-                  verified: true,
-                },
-                {
-                  similarity: 0.88,
-                  title: 'Sanitized innerHTML with textContent assignment',
-                  category: 'XSS',
-                  severity: 'HIGH',
-                  file: 'src/views/profile.js',
-                  fixSummary: 'Swapped innerHTML property with safe textContent sink.',
-                  verified: true,
-                },
-              ],
+              similarPastFixes: [],
               ragMemoryEnabled: true,
             },
           }));
