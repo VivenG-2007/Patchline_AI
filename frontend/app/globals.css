@@ -1,44 +1,58 @@
 @import 'tailwindcss';
 
 /*
-  PatchLine design system — two themes (dark + light), driven by
-  `data-theme` on <html>. Tailwind v4 tokens below point at CSS custom
-  properties so switching the attribute repaints every component that
-  already uses `bg-canvas`, `text-ink`, `border-border`, etc. — nothing in
-  components/ had to change to support theming.
+  PatchLine Dual-Theme System
+  Dark Theme: Deep Obsidian Cyber
+  Light Theme: Clean Enterprise Alabaster
 */
 @theme {
-  --color-canvas: var(--pl-canvas);
-  --color-surface: var(--pl-surface);
-  --color-surface-raised: var(--pl-surface-raised);
-  --color-surface-sunken: var(--pl-surface-sunken);
-  --color-border: var(--pl-border);
-  --color-border-strong: var(--pl-border-strong);
+  --color-bg-base: var(--bg-base);
+  --color-bg-card: var(--bg-card);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-hover: var(--border-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
 
-  --color-ink: var(--pl-ink);
-  --color-muted: var(--pl-muted);
-  --color-faint: var(--pl-faint);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-emerald: var(--accent-emerald);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-rose: var(--accent-rose);
+  --color-accent-purple: var(--accent-purple);
 
-  --color-accent: var(--pl-accent);
-  --color-accent-strong: var(--pl-accent-strong);
-  --color-accent-soft: var(--pl-accent-soft);
+  /* Legacy & semantic aliases for existing UI components */
+  --color-canvas: var(--bg-base);
+  --color-surface: var(--bg-card);
+  --color-surface-raised: var(--bg-card-raised);
+  --color-surface-sunken: var(--bg-subtle);
+  --color-border: var(--border-default);
+  --color-border-strong: var(--border-hover);
 
-  --color-secondary: var(--pl-secondary);
-  --color-secondary-strong: var(--pl-secondary-strong);
-  --color-secondary-soft: var(--pl-secondary-soft);
+  --color-ink: var(--text-primary);
+  --color-muted: var(--text-secondary);
+  --color-faint: var(--text-muted);
 
-  --color-critical: var(--pl-critical);
-  --color-critical-soft: var(--pl-critical-soft);
-  --color-warning: var(--pl-warning);
-  --color-warning-soft: var(--pl-warning-soft);
-  --color-success: var(--pl-success);
-  --color-success-soft: var(--pl-success-soft);
-  --color-info: var(--pl-info);
-  --color-info-soft: var(--pl-info-soft);
+  --color-accent: var(--accent-cyan);
+  --color-accent-strong: var(--accent-cyan-strong);
+  --color-accent-soft: var(--accent-cyan-soft);
 
-  --color-terminal-bg: var(--pl-terminal-bg);
-  --color-terminal-text: var(--pl-terminal-text);
-  --color-terminal-muted: var(--pl-terminal-muted);
+  --color-secondary: var(--accent-purple);
+  --color-secondary-strong: var(--accent-purple-strong);
+  --color-secondary-soft: var(--accent-purple-soft);
+
+  --color-critical: var(--accent-rose);
+  --color-critical-soft: var(--accent-rose-soft);
+  --color-warning: var(--accent-amber);
+  --color-warning-soft: var(--accent-amber-soft);
+  --color-success: var(--accent-emerald);
+  --color-success-soft: var(--accent-emerald-soft);
+  --color-info: var(--accent-cyan);
+  --color-info-soft: var(--accent-cyan-soft);
+
+  --color-terminal-bg: var(--terminal-bg);
+  --color-terminal-text: var(--terminal-text);
+  --color-terminal-muted: var(--terminal-muted);
 
   --font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -51,85 +65,96 @@
   --breakpoint-xs: 30rem;
 }
 
-/* ── Dark theme (default) — "PatchLine" ── */
+/* ── Dark Mode: Deep Obsidian Cyber ── */
 :root,
-:root[data-theme='dark'] {
+:root[data-theme='dark'],
+html.dark {
   color-scheme: dark;
 
-  --pl-canvas: #09090b;
-  --pl-surface: #0d0d10;
-  --pl-surface-raised: #18181b;
-  --pl-surface-sunken: #050506;
-  --pl-border: #27272a;
-  --pl-border-strong: #3f3f46;
+  --bg-base: #070a12;
+  --bg-card: #0d1322;
+  --bg-card-raised: #141d33;
+  --bg-subtle: #111827;
+  --border-default: rgba(51, 65, 85, 0.6);
+  --border-hover: rgba(71, 85, 105, 0.8);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
 
-  --pl-ink: #f4f4f5;
-  --pl-muted: #a1a1aa;
-  --pl-faint: #71717a;
+  --accent-cyan: #06b6d4;
+  --accent-cyan-strong: #38bdf8;
+  --accent-cyan-soft: rgba(6, 182, 212, 0.14);
 
-  --pl-accent: #3b82f6;
-  --pl-accent-strong: #60a5fa;
-  --pl-accent-soft: #1d2a44;
+  --accent-emerald: #10b981;
+  --accent-emerald-strong: #34d399;
+  --accent-emerald-soft: rgba(16, 185, 129, 0.14);
 
-  --pl-secondary: #a855f7;
-  --pl-secondary-strong: #c084fc;
-  --pl-secondary-soft: #2b1a3d;
+  --accent-amber: #f59e0b;
+  --accent-amber-strong: #fbbf24;
+  --accent-amber-soft: rgba(245, 158, 11, 0.14);
 
-  --pl-critical: #f87171;
-  --pl-critical-soft: #2a1416;
-  --pl-warning: #f59e0b;
-  --pl-warning-soft: #2a220c;
-  --pl-success: #10b981;
-  --pl-success-soft: #0d241d;
-  --pl-info: #38bdf8;
-  --pl-info-soft: #0e2333;
+  --accent-rose: #ef4444;
+  --accent-rose-strong: #f87171;
+  --accent-rose-soft: rgba(239, 68, 68, 0.14);
 
-  --pl-terminal-bg: #09090b;
-  --pl-terminal-text: #f4f4f5;
-  --pl-terminal-muted: #71717a;
+  --accent-purple: #a855f7;
+  --accent-purple-strong: #c084fc;
+  --accent-purple-soft: rgba(168, 85, 247, 0.14);
+
+  --terminal-bg: #050810;
+  --terminal-text: #f8fafc;
+  --terminal-muted: #64748b;
+
+  --grid-line-color: rgba(6, 182, 212, 0.05);
+  --card-glow: 0 0 25px -5px rgba(6, 182, 212, 0.12);
 }
 
-/* ── Light theme — "PatchLine Light" ── */
-:root[data-theme='light'] {
+/* ── Light Mode: Clean Enterprise Alabaster ── */
+:root[data-theme='light'],
+html.light {
   color-scheme: light;
 
-  --pl-canvas: #ffffff;
-  --pl-surface: #f9fafb;
-  --pl-surface-raised: #ffffff;
-  --pl-surface-sunken: #f3f4f6;
-  --pl-border: #e5e7eb;
-  --pl-border-strong: #d1d5db;
+  --bg-base: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-raised: #f1f5f9;
+  --bg-subtle: #f1f5f9;
+  --border-default: rgba(226, 232, 240, 0.9);
+  --border-hover: rgba(203, 213, 225, 1.0);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 
-  --pl-ink: #141b2b;
-  --pl-muted: #4b5563;
-  --pl-faint: #737686;
+  --accent-cyan: #0284c7;
+  --accent-cyan-strong: #0369a1;
+  --accent-cyan-soft: rgba(2, 132, 199, 0.1);
 
-  --pl-accent: #2563eb;
-  --pl-accent-strong: #1d4ed8;
-  --pl-accent-soft: #eff6ff;
+  --accent-emerald: #059669;
+  --accent-emerald-strong: #047857;
+  --accent-emerald-soft: rgba(5, 150, 105, 0.1);
 
-  --pl-secondary: #712ae2;
-  --pl-secondary-strong: #5a00c6;
-  --pl-secondary-soft: #f3ebff;
+  --accent-amber: #d97706;
+  --accent-amber-strong: #b45309;
+  --accent-amber-soft: rgba(217, 119, 6, 0.1);
 
-  --pl-critical: #dc2626;
-  --pl-critical-soft: #fef2f2;
-  --pl-warning: #d97706;
-  --pl-warning-soft: #fffbeb;
-  --pl-success: #059669;
-  --pl-success-soft: #ecfdf5;
-  --pl-info: #0891b2;
-  --pl-info-soft: #ecfeff;
+  --accent-rose: #dc2626;
+  --accent-rose-strong: #b91c1c;
+  --accent-rose-soft: rgba(220, 38, 38, 0.1);
 
-  /* Terminal stays dark in light mode too — preserves developer expectations */
-  --pl-terminal-bg: #111827;
-  --pl-terminal-text: #f9fafb;
-  --pl-terminal-muted: #9ca3af;
+  --accent-purple: #7c3aed;
+  --accent-purple-strong: #6d28d9;
+  --accent-purple-soft: rgba(124, 58, 237, 0.1);
+
+  --terminal-bg: #0f172a;
+  --terminal-text: #f8fafc;
+  --terminal-muted: #94a3b8;
+
+  --grid-line-color: rgba(2, 132, 199, 0.04);
+  --card-glow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--border-default);
   }
 
   html {
@@ -137,48 +162,63 @@
   }
 
   body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
     font-family: var(--font-sans);
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+    min-height: 100vh;
   }
 
   ::selection {
-    background: var(--color-accent);
-    color: white;
+    background: var(--accent-cyan);
+    color: #ffffff;
   }
 
   *:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--accent-cyan);
     outline-offset: 2px;
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--color-border-strong);
+    background: var(--border-hover);
     border-radius: 999px;
-    border: 2px solid var(--color-canvas);
   }
 }
 
 @layer utilities {
   .grid-overlay {
     background-image:
-      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+      linear-gradient(var(--grid-line-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line-color) 1px, transparent 1px);
     background-size: 40px 40px;
     background-position: center top;
   }
 
-  .glow-accent {
-    box-shadow: 0 0 0 1px var(--color-accent) inset, 0 0 24px -8px var(--color-accent);
+  .glow-cyan {
+    box-shadow: 0 0 0 1px var(--accent-cyan) inset, 0 0 24px -6px var(--accent-cyan);
+  }
+
+  .glow-emerald {
+    box-shadow: 0 0 0 1px var(--accent-emerald) inset, 0 0 24px -6px var(--accent-emerald);
+  }
+
+  .card-surface {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--card-glow);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card-surface:hover {
+    border-color: var(--border-hover);
   }
 
   @keyframes scanline-sweep {
@@ -189,16 +229,25 @@
     position: absolute;
     inset: 0 0 auto 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--color-accent-strong), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
     animation: scanline-sweep 2.4s ease-in-out infinite;
   }
 
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
   }
   .pulse-dot {
     animation: pulse-dot 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+  }
+  .pulse-ring-active {
+    animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
   }
 
   @keyframes shimmer {
@@ -208,41 +257,54 @@
   .shimmer-bg {
     background-image: linear-gradient(
       90deg,
-      var(--color-accent) 0%,
-      var(--color-accent-strong) 50%,
-      var(--color-accent) 100%
+      var(--accent-cyan) 0%,
+      var(--accent-cyan-strong) 50%,
+      var(--accent-cyan) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.6s linear infinite;
   }
 
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--bg-card) 0%,
+      var(--bg-card-raised) 50%,
+      var(--bg-card) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
   @keyframes fade-rise-in {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
   .animate-fade-rise-in {
-    animation: fade-rise-in 0.35s ease-out both;
+    animation: fade-rise-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
-  .animate-fade-in {
-    animation: fade-in 0.2s ease-out both;
+  .animate-slide-in-right {
+    animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .backdrop-blur-nav {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 
   @media (prefers-reduced-motion: reduce) {
     .scanline,
     .pulse-dot,
+    .pulse-ring-active,
     .shimmer-bg,
+    .skeleton-shimmer,
     .animate-fade-rise-in,
-    .animate-fade-in {
+    .animate-slide-in-right {
       animation: none;
     }
     html {

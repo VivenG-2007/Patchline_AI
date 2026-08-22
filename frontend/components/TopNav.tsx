@@ -22,10 +22,6 @@ export default function TopNav() {
     function onScroll() {
       const y = window.scrollY;
       setScrolled(y > 24);
-      // Only start hiding after scrolling well past the hero, and only for
-      // a real downward scroll (not a tiny wobble) — reappears immediately
-      // on any upward scroll, which is what makes it feel "dynamic" rather
-      // than janky.
       if (y > lastY.current + 4 && y > 120) {
         setHidden(true);
       } else if (y < lastY.current - 4 || y < 120) {
@@ -46,26 +42,30 @@ export default function TopNav() {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-transform duration-300 ${hidden ? '-translate-y-full' : 'translate-y-0'}`}
+      className={`fixed top-0 inset-x-0 z-50 transition-transform duration-300 ${
+        hidden ? '-translate-y-full' : 'translate-y-0'
+      }`}
     >
       <div
         className={`transition-all duration-300 border-b ${
           scrolled
-            ? 'bg-canvas/80 backdrop-blur-nav border-border shadow-sm'
+            ? 'bg-bg-base/85 backdrop-blur-nav border-border-default shadow-sm'
             : 'bg-transparent border-transparent'
         }`}
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-accent-soft border border-accent/30 flex items-center justify-center">
-              <ShieldCheck size={15} className="text-accent-strong" strokeWidth={2} />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-accent-cyan-soft border border-accent-cyan/30 flex items-center justify-center text-accent-cyan shadow-sm group-hover:scale-105 transition-transform">
+              <ShieldCheck size={18} strokeWidth={2.2} />
             </div>
-            <span className="font-display font-semibold text-ink">PatchLine</span>
+            <span className="font-display font-bold text-lg text-text-primary tracking-tight">
+              PatchLine <span className="text-accent-cyan font-mono text-xs">AI</span>
+            </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm">
+          <nav className="hidden md:flex items-center gap-8 text-xs font-medium">
             {LINKS.map((l) => (
-              <a key={l.href} href={l.href} className="text-muted hover:text-ink transition-colors">
+              <a key={l.href} href={l.href} className="text-text-secondary hover:text-text-primary transition-colors">
                 {l.label}
               </a>
             ))}
@@ -73,60 +73,66 @@ export default function TopNav() {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Link href="/login" className="text-sm text-muted hover:text-ink transition-colors px-2">
+            <Link href="/login" className="text-xs font-mono text-text-secondary hover:text-text-primary transition-colors px-2">
               Sign in
             </Link>
             <Link
               href="/login?mode=register"
-              className="bg-accent text-white font-medium rounded-md px-4 py-2 text-sm hover:bg-accent-strong transition-colors"
+              className="bg-accent-cyan text-white font-medium rounded-lg px-4 py-2 text-xs font-mono hover:bg-accent-cyan-strong transition-all shadow-sm active:scale-95"
             >
               Start Scanning
             </Link>
           </div>
 
-          <button className="md:hidden text-ink" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <button
+            className="md:hidden text-text-primary p-1"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+          >
             <Menu size={22} strokeWidth={1.75} />
           </button>
         </div>
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 bg-canvas z-50 animate-fade-in">
-          <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-            <span className="font-display font-semibold text-ink">PatchLine</span>
-            <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-ink">
+        <div className="md:hidden fixed inset-0 bg-bg-base z-50 animate-fade-in flex flex-col">
+          <div className="h-16 flex items-center justify-between px-6 border-b border-border-default">
+            <span className="font-display font-bold text-text-primary">PatchLine AI</span>
+            <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-text-primary p-1">
               <X size={22} strokeWidth={1.75} />
             </button>
           </div>
-          <nav className="flex flex-col px-6 py-8 gap-1">
+          <nav className="flex flex-col px-6 py-8 gap-2 flex-1">
             {LINKS.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileOpen(false)}
-                className="text-lg text-ink py-3 border-b border-border"
+                className="text-base text-text-primary py-3 border-b border-border-default font-medium"
               >
                 {l.label}
               </a>
             ))}
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex items-center justify-between py-4 mt-2">
+              <span className="text-sm text-text-secondary">Interface Theme</span>
               <ThemeToggle />
-              <span className="text-sm text-muted">Toggle theme</span>
             </div>
-            <Link
-              href="/login"
-              onClick={() => setMobileOpen(false)}
-              className="mt-6 text-center border border-border-strong rounded-md py-3 text-ink"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/login?mode=register"
-              onClick={() => setMobileOpen(false)}
-              className="mt-3 text-center bg-accent text-white rounded-md py-3 font-medium"
-            >
-              Start Scanning
-            </Link>
+            <div className="mt-auto space-y-3 pt-6">
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block text-center border border-border-default rounded-xl py-3 text-xs font-mono text-text-primary bg-bg-card"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/login?mode=register"
+                onClick={() => setMobileOpen(false)}
+                className="block text-center bg-accent-cyan text-white rounded-xl py-3 text-xs font-mono font-medium shadow-md"
+              >
+                Start Scanning
+              </Link>
+            </div>
           </nav>
         </div>
       )}

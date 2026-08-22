@@ -2,45 +2,97 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-type Theme = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light' | 'system';
+export type ResolvedTheme = 'dark' | 'light';
 
 interface ThemeContextValue {
-  theme: Theme;
+  theme: ThemeMode;
+  resolvedTheme: ResolvedTheme;
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'patchline-theme';
+export const STORAGE_KEY = 'patchline_theme';
+export const LEGACY_STORAGE_KEY = 'patchline-theme';
+
+function getSystemTheme(): ResolvedTheme {
+  if (typeof window === 'undefined') return 'dark';
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // The inline script in layout.tsx already set document.documentElement's
-  // data-theme attribute before hydration (avoids a flash of the wrong
-  // theme); read it back here so React state agrees with the DOM instead of
-  // re-deciding and risking a mismatch.
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<ThemeMode>('dark');
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('dark');
 
+  // Initialize theme from DOM attribute / localStorage
   useEffect(() => {
-    const current = (document.documentElement.getAttribute('data-theme') as Theme) || 'dark';
-    setThemeState(current);
+    try {
+      const stored = (localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)) as ThemeMode | null;
+      const initialMode: ThemeMode = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'dark';
+      const resolved = initialMode === 'system' ? getSystemTheme() : initialMode;
+      
+      setThemeState(initialMode);
+      setResolvedTheme(resolved);
+      
+      applyThemeToDom(initialMode, resolved);
+    } catch {
+      setThemeState('dark');
+      setResolvedTheme('dark');
+    }
   }, []);
 
-  const setTheme = useCallback((next: Theme) => {
+  // Listen to OS system theme changes when mode is 'system'
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const media = window.matchMedia('(prefers-color-scheme: light)');
+    const handler = (e: MediaQueryListEvent) => {
+      const nextResolved = e.matches ? 'light' : 'dark';
+      setResolvedTheme(nextResolved);
+      applyThemeToDom('system', nextResolved);
+    };
+
+    media.addEventListener('change', handler);
+    return () => media.removeEventListener('change', handler);
+  }, [theme]);
+
+  const applyThemeToDom = (mode: ThemeMode, resolved: ResolvedTheme) => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', resolved);
+    root.setAttribute('data-theme-mode', mode);
+    if (resolved === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+  };
+
+  const setTheme = useCallback((next: ThemeMode) => {
     setThemeState(next);
-    document.documentElement.setAttribute('data-theme', next);
+    const resolved = next === 'system' ? getSystemTheme() : next;
+    setResolvedTheme(resolved);
+    applyThemeToDom(next, resolved);
+
     try {
       localStorage.setItem(STORAGE_KEY, next);
+      localStorage.setItem(LEGACY_STORAGE_KEY, next);
     } catch {
-      /* localStorage unavailable (private mode etc.) — theme just won't persist */
+      /* localStorage unavailable (private mode etc.) */
     }
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }, [theme, setTheme]);
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedTheme, setTheme]);
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ theme, resolvedTheme, toggleTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
@@ -49,19 +101,37 @@ export function useTheme() {
   return ctx;
 }
 
-// Inline script string injected into <head> by layout.tsx, executed before
-// React hydrates — this is what prevents a flash of dark-theme-on-light (or
-// vice versa) on page load.
+// Inline anti-flicker script injected into <head> by layout.tsx
 export const themeInitScript = `
 (function() {
   try {
-    var stored = localStorage.getItem('${STORAGE_KEY}');
-    var theme = stored === 'light' || stored === 'dark'
-      ? stored
-      : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-    document.documentElement.setAttribute('data-theme', theme);
+    var stored = localStorage.getItem('${STORAGE_KEY}') || localStorage.getItem('${LEGACY_STORAGE_KEY}');
+    var isDarkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var resolved = 'dark';
+    
+    if (stored === 'light') {
+      resolved = 'light';
+    } else if (stored === 'dark') {
+      resolved = 'dark';
+    } else if (stored === 'system') {
+      resolved = isDarkPreferred ? 'dark' : 'light';
+    } else {
+      resolved = isDarkPreferred ? 'dark' : 'dark';
+    }
+
+    var root = document.documentElement;
+    root.setAttribute('data-theme', resolved);
+    root.setAttribute('data-theme-mode', stored || 'dark');
+    if (resolved === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
   } catch (e) {
     document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.classList.add('dark');
   }
 })();
 `;

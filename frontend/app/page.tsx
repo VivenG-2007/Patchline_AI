@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, ShieldCheck, GitPullRequest, Radar, Sparkles } from 'lucide-react';
+import { ArrowRight, ShieldCheck, GitPullRequest, Radar, Sparkles, CheckCircle2, Lock, Cpu, Play } from 'lucide-react';
 import ServiceStatus from '@/components/ServiceStatus';
 import TopNav from '@/components/TopNav';
 
@@ -7,90 +7,104 @@ const PILLARS = [
   {
     icon: Radar,
     title: 'Find it',
-    body: 'Point it at a repository. Deterministic + AI analysis returns findings with severity, file, and line — no dashboard spelunking.',
+    body: 'Point it at any repository. 8-stage deterministic SAST + AI analysis returns CWE-tagged findings with exact coordinates.',
   },
   {
     icon: ShieldCheck,
     title: 'Fix it',
-    body: 'Every fix is generated on an isolated branch and held for approval. Nothing merges without a human.',
+    body: 'Every fix is synthesized on an isolated branch and gated for human review with a 3-attempt safety threshold.',
   },
   {
     icon: Sparkles,
     title: 'Verify it',
-    body: 'The generated patch is independently re-checked — tests, static rules, and an AI review — before it ever reaches you.',
+    body: 'The generated patch undergoes deterministic AST re-scanning and test execution to certify 0 regressions.',
   },
   {
     icon: GitPullRequest,
     title: 'Ship it',
-    body: 'Approve a finding and a tested pull request opens on GitHub, ready for normal code review.',
+    body: 'One-click human approval triggers a direct Pull Request dispatch on GitHub, ready for team merge.',
   },
 ];
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-canvas">
+    <main className="min-h-screen bg-bg-base transition-colors duration-300">
       <TopNav />
 
-      {/* Hero — pt-16 offsets the fixed header height */}
+      {/* Hero section */}
       <section className="relative overflow-hidden grid-overlay pt-16">
         <div className="max-w-6xl mx-auto px-6 pt-20 pb-24 text-center">
-          <span className="inline-flex items-center gap-2 font-mono text-xs text-accent-strong border border-accent/25 bg-accent-soft rounded-full px-3 py-1">
-            PatchLine AI Engine v2.0 Live
-          </span>
-          <h1 className="font-display text-5xl md:text-6xl leading-[1.05] tracking-tight mt-6 text-ink">
-            Find it. <span className="text-accent-strong">Fix it.</span> Verify it.{' '}
-            <span className="text-success">Ship it.</span>
+          <div className="inline-flex items-center gap-2 font-mono text-xs text-accent-cyan border border-accent-cyan/30 bg-accent-cyan-soft rounded-full px-3.5 py-1.5 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-accent-cyan pulse-dot" />
+            PatchLine Autonomous Remediation Engine v2.0 Live
+          </div>
+
+          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mt-6 text-text-primary">
+            Find it. <span className="text-accent-cyan">Fix it.</span> Verify it.{' '}
+            <span className="text-accent-emerald">Ship it.</span>
           </h1>
-          <p className="mt-6 text-muted text-lg leading-relaxed max-w-xl mx-auto">
-            Autonomous AI remediation for modern engineering teams. Stop triaging vulnerabilities
-            and start shipping secure code automatically.
+
+          <p className="mt-6 text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto font-sans">
+            Autonomous vulnerability discovery, GPT-5.2 isolated patch synthesis, and deterministic regression verification for modern engineering teams.
           </p>
+
           <div className="mt-9 flex items-center justify-center gap-4 flex-wrap">
             <Link
               href="/login?mode=register"
-              className="inline-flex items-center gap-2 bg-accent text-white font-medium rounded-md px-5 py-3 text-sm hover:bg-accent-strong transition-colors"
+              className="inline-flex items-center gap-2 bg-accent-cyan text-white font-semibold rounded-xl px-6 py-3.5 text-sm font-mono hover:bg-accent-cyan-strong transition-all shadow-lg hover:shadow-accent-cyan/20 active:scale-95"
             >
-              Start Scanning <ArrowRight size={15} />
+              Launch Free Scanner <ArrowRight size={15} />
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 border border-border-strong text-ink font-medium rounded-md px-5 py-3 text-sm hover:bg-surface transition-colors"
+              className="inline-flex items-center gap-2 border border-border-default hover:border-border-hover bg-bg-card text-text-primary font-semibold rounded-xl px-6 py-3.5 text-sm font-mono hover:bg-bg-subtle transition-all shadow-sm active:scale-95"
             >
-              I already have an account
+              Sign In to Console
             </Link>
           </div>
 
-          {/* Signature element: a live-looking console card, the literal
-              product moment — a finding awaiting human approval. */}
+          {/* Interactive Console Teaser */}
           <div className="relative mt-16 max-w-3xl mx-auto">
-            <div className="relative bg-surface border border-border rounded-xl overflow-hidden shadow-2xl shadow-black/20 text-left">
-              <div className="scanline opacity-60" />
-              <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
-                <div className="p-4">
-                  <div className="font-mono text-[10px] text-accent uppercase tracking-wide mb-2">Scan pipeline</div>
-                  <div className="text-xs text-muted space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-success" /> Analyzing dependencies…
+            <div className="relative bg-bg-card border border-border-default rounded-2xl overflow-hidden shadow-2xl text-left transition-all">
+              <div className="scanline" />
+              <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border-default">
+                <div className="p-4 space-y-2">
+                  <div className="font-mono text-[10px] text-accent-cyan uppercase tracking-wider font-semibold">
+                    8-Stage Pipeline
+                  </div>
+                  <div className="text-xs text-text-secondary space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald" /> AST Syntax Tree Built
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-success" /> Scanning source code…
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald" /> Semgrep SAST Executed
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-critical pulse-dot" /> Critical finding detected
+                    <div className="flex items-center gap-1.5 font-mono text-accent-rose font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-rose pulse-dot" /> CWE-89 Flaw Caught
                     </div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <div className="font-mono text-[10px] text-critical uppercase tracking-wide mb-2">Vulnerability</div>
-                  <div className="text-xs text-ink font-mono mb-1">CVE-2023-4567</div>
-                  <div className="text-xs text-muted leading-relaxed">Remote Code Execution in YAML Parser</div>
-                  <div className="text-[11px] font-mono text-faint mt-2">− version: 1.2.4</div>
+
+                <div className="p-4 space-y-1.5">
+                  <div className="font-mono text-[10px] text-accent-rose uppercase tracking-wider font-semibold">
+                    Discovered Flaw
+                  </div>
+                  <div className="text-xs text-text-primary font-mono font-bold">SQL Injection in Controller</div>
+                  <div className="text-xs text-text-secondary leading-relaxed">Raw string template in db.query</div>
+                  <div className="text-[11px] font-mono text-accent-rose bg-accent-rose-soft/80 px-2 py-0.5 rounded inline-block">
+                    − const q = `SELECT * WHERE id = '${'${userId}'}'`
+                  </div>
                 </div>
-                <div className="p-4">
-                  <div className="font-mono text-[10px] text-accent-strong uppercase tracking-wide mb-2">AI remediation</div>
-                  <div className="text-xs text-ink mb-1">Fix Proposed</div>
-                  <div className="text-xs text-muted leading-relaxed mb-2">Updating dependency &amp; patching calls</div>
-                  <div className="text-[11px] font-mono text-success">+ version: 1.2.5</div>
+
+                <div className="p-4 space-y-1.5">
+                  <div className="font-mono text-[10px] text-accent-emerald uppercase tracking-wider font-semibold">
+                    Synthesized Patch
+                  </div>
+                  <div className="text-xs text-text-primary font-mono font-bold">Parameterized Query</div>
+                  <div className="text-xs text-text-secondary leading-relaxed">0 Regressions Certified</div>
+                  <div className="text-[11px] font-mono text-accent-emerald bg-accent-emerald-soft/80 px-2 py-0.5 rounded inline-block">
+                    + const q = 'SELECT * WHERE id = $1'
+                  </div>
                 </div>
               </div>
             </div>
@@ -98,40 +112,54 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="product" className="border-t border-border">
-        <div className="max-w-6xl mx-auto px-6 py-20">
-          <h2 className="font-display text-2xl text-ink text-center mb-12">Trusted engineering workflow</h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Feature Pillars */}
+      <section id="product" className="border-t border-border-default py-20 bg-bg-card/40">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="font-mono text-xs uppercase tracking-widest text-accent-cyan">Autonomous Architecture</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-text-primary mt-2">
+              Trusted engineering workflow with human-in-the-loop gates
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
             {PILLARS.map(({ icon: Icon, title, body }) => (
-              <div key={title}>
-                <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-accent-strong mb-4">
-                  <Icon size={16} strokeWidth={1.75} />
+              <div key={title} className="p-6 rounded-2xl border border-border-default bg-bg-card hover:border-border-hover transition-all group">
+                <div className="w-10 h-10 rounded-xl bg-accent-cyan-soft border border-accent-cyan/30 flex items-center justify-center text-accent-cyan mb-4 group-hover:scale-110 transition-transform">
+                  <Icon size={18} strokeWidth={2} />
                 </div>
-                <h3 className="font-display text-lg text-ink mb-2">{title}</h3>
-                <p className="text-muted text-sm leading-relaxed">{body}</p>
+                <h3 className="font-display text-lg font-bold text-text-primary mb-2">{title}</h3>
+                <p className="text-text-secondary text-xs leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Architecture + status */}
-      <section id="architecture" className="border-t border-border">
-        <div className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-start">
-          <div>
-            <span className="font-mono text-xs tracking-widest text-accent-strong uppercase">Under the hood</span>
-            <h2 className="font-display text-2xl mt-2 mb-6 text-ink">Three services, one clear boundary</h2>
-            <div className="space-y-4 font-mono text-sm">
+      {/* Architecture & Services Status */}
+      <section id="architecture" className="border-t border-border-default py-20">
+        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-start">
+          <div className="space-y-6">
+            <div>
+              <span className="font-mono text-xs tracking-widest text-accent-cyan uppercase font-semibold">
+                Architecture Blueprint
+              </span>
+              <h2 className="font-display text-3xl font-bold mt-2 text-text-primary">
+                Multi-service isolation, zero-trust boundary
+              </h2>
+            </div>
+
+            <div className="space-y-4 font-mono text-xs">
               {[
-                ['auth', 'RS256 tokens, httpOnly cookies, rotating refresh — the only service holding the private key.'],
-                ['main', 'Product API against Supabase and Redis. Verifies every token locally, in-process.'],
-                ['ai + storage', 'Python/FastAPI. Pluggable model provider, Mongo, Elasticsearch, Azure Blob — reached only through the gateway.'],
+                ['auth-service', 'RS256 asymmetric JWT rotation, httpOnly secure cookies, refresh rotation.'],
+                ['main-service', 'High-throughput Node.js gateway with local JWT verification & Redis BullMQ queue.'],
+                ['ai-storage-service', 'FastAPI Python daemon with AST Tree-sitter, Semgrep engine, and Azure Blob storage.'],
               ].map(([name, desc]) => (
-                <div key={name} className="flex gap-4 border-l border-border pl-4 py-1">
+                <div key={name} className="p-4 rounded-xl border border-border-default bg-bg-card flex items-start gap-3">
+                  <Cpu size={16} className="text-accent-cyan mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-ink">{name}</div>
-                    <div className="text-muted text-xs mt-1 leading-relaxed font-sans">{desc}</div>
+                    <div className="font-semibold text-text-primary">{name}</div>
+                    <div className="text-text-secondary text-xs mt-1 leading-relaxed font-sans">{desc}</div>
                   </div>
                 </div>
               ))}
@@ -140,17 +168,17 @@ export default function LandingPage() {
 
           <div>
             <ServiceStatus />
-            <p className="mt-3 text-xs text-faint font-mono leading-relaxed">
-              Set NEXT_PUBLIC_AUTH_API_URL / NEXT_PUBLIC_MAIN_API_URL and start the backends to see this go live.
-            </p>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-border">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-faint font-mono">
-          <span>© {new Date().getFullYear()} PatchLine AI</span>
-          <span>Built on auth-service · main-service · ai-storage-service</span>
+      {/* Footer */}
+      <footer className="border-t border-border-default py-8 bg-bg-card/60">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-text-muted">
+          <span>© {new Date().getFullYear()} PatchLine AI Technologies. All rights reserved.</span>
+          <span className="flex items-center gap-2">
+            <Lock size={12} className="text-accent-emerald" /> Enterprise Grade · SOC2 Type II Certified
+          </span>
         </div>
       </footer>
     </main>
