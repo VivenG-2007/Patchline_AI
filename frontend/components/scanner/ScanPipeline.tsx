@@ -214,11 +214,12 @@ export default function ScanPipeline({
           style={{ width: `${Math.max(0, (currentStageIndex / (PIPELINE_STAGES.length - 1)) * 100)}%` }}
         />
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 relative z-10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3 relative z-10 overflow-x-auto pb-1">
           {PIPELINE_STAGES.map((stage, idx) => {
-            const isDone = idx < currentStageIndex;
+            const isPipelineFinished = !isScanning || currentStageIndex >= 7;
+            const isDone = idx < currentStageIndex || (isPipelineFinished && idx <= 7);
             const isActive = idx === currentStageIndex && isScanning;
-            const isPending = idx > currentStageIndex;
+            const isPending = idx > currentStageIndex && !isPipelineFinished;
             const isSelected = selectedStage?.id === stage.id;
 
             return (

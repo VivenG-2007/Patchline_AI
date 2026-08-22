@@ -462,6 +462,29 @@ function ScannerView() {
     }
   };
 
+  const handleFixAllVulnerabilities = async () => {
+    if (!scanResult || !scanResult.findings || scanResult.findings.length === 0) return;
+    const unfixed = scanResult.findings.filter(
+      (f) => !fixStates[f.id] || (fixStates[f.id].phase !== 'VERIFIED' && fixStates[f.id].phase !== 'PROCESSING')
+    );
+    if (unfixed.length === 0) {
+      addToast({
+        type: 'info',
+        title: 'All Fixes In Progress or Complete',
+        message: 'All identified vulnerabilities have already been fixed or are currently synthesizing.',
+      });
+      return;
+    }
+    addToast({
+      type: 'success',
+      title: `Batch AI Fix Triggered (${unfixed.length} vulnerabilities)`,
+      message: `Synthesizing GPT-5.2 patches for ${unfixed.length} vulnerability findings simultaneously.`,
+    });
+    for (const f of unfixed) {
+      handleApproveAndFix(f.id);
+    }
+  };
+
   return (
     <ProtectedShell>
       {/* Page Header */}
@@ -579,19 +602,30 @@ function ScannerView() {
       {/* 3. Findings & Remediation Grid */}
       {scanResult && (
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-border-default bg-bg-card">
             <div>
-              <h2 className="font-display text-lg font-bold text-text-primary">
-                Identified Flaws ({scanResult.findings.length})
+              <h2 className="font-display text-lg font-bold text-text-primary flex items-center gap-2">
+                <span>Identified Flaws ({scanResult.findings.length})</span>
               </h2>
-              <p className="text-xs text-text-muted">
+              <p className="text-xs text-text-muted mt-0.5">
                 Each flaw is isolated and ready for human-authorized GPT-5.2 patch synthesis and GPT-5.3 verification.
               </p>
             </div>
 
-            <span className="font-mono text-xs text-text-muted">
-              Scan ID: <strong className="text-text-primary">{scanResult.scanId}</strong>
-            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                onClick={handleFixAllVulnerabilities}
+                className="gap-2 text-xs font-mono py-2 px-4 shadow-lg flex items-center"
+              >
+                <Sparkles size={14} />
+                <span>Fix All Vulnerabilities ({scanResult.findings.length})</span>
+              </Button>
+
+              <span className="font-mono text-xs text-text-muted hidden sm:inline">
+                Scan ID: <strong className="text-text-primary">{scanResult.scanId}</strong>
+              </span>
+            </div>
           </div>
 
           <div className="space-y-4">
