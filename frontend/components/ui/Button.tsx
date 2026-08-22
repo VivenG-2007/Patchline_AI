@@ -1,9 +1,9 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'gradient' | 'gradient-variant';
 type Size = 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
 }
@@ -17,12 +17,14 @@ const variants: Record<Variant, string> = {
   ghost: 'text-text-secondary hover:text-text-primary hover:bg-bg-subtle',
   danger: 'bg-accent-rose-soft text-accent-rose border border-accent-rose/30 hover:bg-accent-rose/20',
   success: 'bg-accent-emerald text-white hover:bg-accent-emerald-strong shadow-sm',
+  gradient: 'gradient-button text-white shadow-md',
+  'gradient-variant': 'gradient-button gradient-button-variant text-white shadow-md',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'text-xs px-3 py-1.5 font-mono',
-  md: 'text-sm px-4 py-2',
-  lg: 'text-base px-5 py-2.5',
+  sm: 'text-xs px-3.5 py-1.5 font-mono',
+  md: 'text-sm px-4.5 py-2',
+  lg: 'text-base px-6 py-3',
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

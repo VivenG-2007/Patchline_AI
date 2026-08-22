@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, ShieldCheck, GitPullRequest, Radar, Sparkles, CheckCircle2, Lock, Cpu, Play } from 'lucide-react';
 import ServiceStatus from '@/components/ServiceStatus';
 import TopNav from '@/components/TopNav';
+import { GradientButton } from '@/components/ui/gradient-button';
 
 const PILLARS = [
   {
@@ -49,15 +50,14 @@ export default function LandingPage() {
           </p>
 
           <div className="mt-9 flex items-center justify-center gap-4 flex-wrap">
-            <Link
-              href="/login?mode=register"
-              className="inline-flex items-center gap-2 bg-accent-cyan text-white font-semibold rounded-xl px-6 py-3.5 text-sm font-mono hover:bg-accent-cyan-strong transition-all shadow-lg hover:shadow-accent-cyan/20 active:scale-95"
-            >
-              Launch Free Scanner <ArrowRight size={15} />
+            <Link href="/login?mode=register">
+              <GradientButton className="text-xs font-mono py-3 px-6 gap-2">
+                Launch Free Scanner <ArrowRight size={15} />
+              </GradientButton>
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 border border-border-default hover:border-border-hover bg-bg-card text-text-primary font-semibold rounded-xl px-6 py-3.5 text-sm font-mono hover:bg-bg-subtle transition-all shadow-sm active:scale-95"
+              className="inline-flex items-center gap-2 border border-border-default hover:border-border-hover bg-bg-card text-text-primary font-semibold rounded-xl px-6 py-3 text-xs font-mono hover:bg-bg-subtle transition-all shadow-sm active:scale-95"
             >
               Sign In to Console
             </Link>

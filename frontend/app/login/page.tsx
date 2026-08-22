@@ -10,6 +10,7 @@ import Alert from '@/components/ui/Alert';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import ThemeToggle from '@/components/ThemeToggle';
+import { PasswordStrength } from '@/components/ui/password-strength';
 
 function LoginForm() {
   const router = useRouter();
@@ -115,6 +116,17 @@ function LoginForm() {
                 />
               </div>
             </div>
+
+            {/* Interactive Password Strength meter */}
+            {password.length > 0 && (
+              <div className="pt-1 pb-1">
+                <PasswordStrength
+                  value={password}
+                  showRules={isRegister}
+                  className="animate-fade-rise-in font-mono text-xs"
+                />
+              </div>
+            )}
 
             {error && <Alert tone="critical">{error}</Alert>}
 

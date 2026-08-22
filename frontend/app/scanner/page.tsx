@@ -418,12 +418,12 @@ function ScannerView() {
               </div>
             </div>
 
-            {/* Launch Scan Button with double-click guard */}
+            {/* Launch Scan Button with double-click guard and gradient-button effect */}
             <Button
               type="submit"
-              variant="primary"
+              variant="gradient"
               disabled={scanning || !repoInput.trim()}
-              className="py-2.5 px-5 font-mono text-xs gap-2 shrink-0"
+              className="py-2.5 px-6 font-mono text-xs gap-2 shrink-0"
             >
               {scanning ? (
                 <>
