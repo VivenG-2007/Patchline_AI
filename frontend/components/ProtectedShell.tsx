@@ -172,52 +172,18 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
   }
 
   const handleLogout = async () => {
-    try {
-      sessionStorage.removeItem('patchline_workspace_loaded');
-    } catch {
-      // ignore
-    }
     await logout();
     router.push('/');
   };
 
-  const [showLoading, setShowLoading] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    try {
-      const hasLoaded = sessionStorage.getItem('patchline_workspace_loaded') === 'true';
-      const navEntries = performance.getEntriesByType?.('navigation');
-      const isReload =
-        navEntries &&
-        navEntries.length > 0 &&
-        (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
-
-      // Play loading animation ONLY after login once or on full browser page refresh
-      if (hasLoaded && !isReload) {
-        return false;
-      }
-    } catch {
-      // fallback
-    }
-    return true;
-  });
-
-  const handleLoadingComplete = () => {
-    setShowLoading(false);
-    try {
-      sessionStorage.setItem('patchline_workspace_loaded', 'true');
-    } catch {
-      // ignore
-    }
-  };
-
-  if (loading || showLoading) {
+  if (loading) {
     return (
-      <LoadingScreen
-        title="Initializing Workspace…"
-        subtitle="Verifying session credentials & loading security telemetry."
-        durationMs={2400}
-        onComplete={handleLoadingComplete}
-      />
+      <div className="min-h-screen bg-bg-base flex items-center justify-center font-mono text-xs text-text-muted">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-accent-cyan pulse-dot" />
+          <span>Authenticating…</span>
+        </div>
+      </div>
     );
   }
   if (!user) return null;

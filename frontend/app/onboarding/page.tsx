@@ -11,6 +11,8 @@ import Card from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
 import ThemeToggle from '@/components/ThemeToggle';
 
+import LoadingScreen from '@/components/LoadingScreen';
+
 type Step = 1 | 2 | 3;
 
 const STEPS: { step: Step; label: string }[] = [
@@ -28,6 +30,7 @@ function OnboardingInner() {
   const [step, setStep] = useState<Step>(1);
   const [githubConnected, setGithubConnected] = useState(false);
   const [jiraConnected, setJiraConnected] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
   const oauthError = params.get('error');
   const justConnected = params.get('provider');
@@ -55,6 +58,17 @@ function OnboardingInner() {
       setResolving(false);
     });
   }, [user, params]);
+
+  if (launching) {
+    return (
+      <LoadingScreen
+        title="Finalizing Account Setup…"
+        subtitle="Configuring security scanners & initializing workspace telemetry."
+        durationMs={2400}
+        onComplete={() => router.push('/dashboard')}
+      />
+    );
+  }
 
   if (authLoading || resolving) {
     return (
@@ -159,7 +173,7 @@ function OnboardingInner() {
                   {jiraConnected ? 'Jira integration is enabled.' : 'Jira can be connected later if desired.'}
                 </p>
               </div>
-              <Button onClick={() => router.push('/dashboard')} className="w-full py-2.5 font-mono text-xs gap-2">
+              <Button onClick={() => setLaunching(true)} className="w-full py-2.5 font-mono text-xs gap-2">
                 Launch Security Dashboard <ArrowRight size={14} />
               </Button>
             </div>
