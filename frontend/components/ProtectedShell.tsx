@@ -193,9 +193,11 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>
 
-      {/* Desktop Sidebar — collapsible */}
+      {/* Desktop Sidebar — fixed floating overlay */}
       <aside
-        className="hidden md:flex flex-col shrink-0 z-20 overflow-hidden transition-all duration-200 ease-out"
+        className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 z-40 overflow-hidden transition-all duration-300 ease-in-out ${
+          sidebarExpanded ? 'shadow-2xl ring-1 ring-white/10' : 'shadow-md'
+        }`}
         style={{
           width: sidebarExpanded ? 220 : 68,
           background: 'var(--sidebar-bg)',
@@ -291,8 +293,9 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         </div>
       )}
 
-      {/* Main content column */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* Main content column with fixed 68px left padding for desktop sidebar */}
+      <div className="flex-1 min-w-0 flex flex-col md:pl-[68px]">
+
         {/* Top header */}
         <header
           className="h-14 shrink-0 flex items-center justify-between gap-3 px-4 md:px-6 sticky top-0 z-30 backdrop-blur-nav"
