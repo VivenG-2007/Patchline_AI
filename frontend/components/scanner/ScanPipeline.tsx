@@ -146,7 +146,8 @@ export default function ScanPipeline({
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(14);
-  const startRef = useRef(Date.now() - 14000);
+  const [initialTime] = useState(() => Date.now() - 14000);
+  const startRef = useRef(initialTime);
 
   useEffect(() => {
     if (!isScanning) return;

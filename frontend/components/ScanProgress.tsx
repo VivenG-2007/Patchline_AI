@@ -21,6 +21,7 @@ interface ScanProgressProps {
  */
 export default function ScanProgress({ phase, repo }: ScanProgressProps) {
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [log, setLog] = useState<string[]>([]);
   const [startTime] = useState(() => Date.now());
   const startRef = useRef(startTime);
   const lastPhaseRef = useRef<string | null>(null);

@@ -17,6 +17,8 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 export const STORAGE_KEY = 'patchline_theme';
 export const LEGACY_STORAGE_KEY = 'patchline-theme';
 
+export const themeInitScript = `(function(){try{var s=localStorage.getItem('${STORAGE_KEY}')||localStorage.getItem('${LEGACY_STORAGE_KEY}');var m=s==='light'||s==='dark'||s==='system'?s:'dark';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;var root=document.documentElement;root.setAttribute('data-theme',r);root.setAttribute('data-theme-mode',m);if(r==='dark'){root.classList.add('dark');root.classList.remove('light')}else{root.classList.add('light');root.classList.remove('dark')}}catch(e){}})();`;
+
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'dark';
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
