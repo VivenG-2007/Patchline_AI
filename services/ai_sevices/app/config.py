@@ -108,9 +108,8 @@ class Settings(BaseSettings):
     reconciliation_interval_seconds: int = 300  # how often the sweep runs
 
     # ── Elasticsearch (optional — search degrades gracefully if unset) ──
-    # Local/self-hosted: set ES_URL (e.g. http://elasticsearch:9200) and,
-    # if security is enabled, ES_USERNAME/ES_PASSWORD or ES_API_KEY.
-    # Elastic Cloud: set ES_CLOUD_ID + ES_API_KEY instead of ES_URL.
+    # Direct endpoint URL (e.g. http://localhost:9200 or https://your-es-cluster-endpoint:9200)
+    es_endpoint: Optional[str] = None
     es_url: Optional[str] = None
     es_cloud_id: Optional[str] = None
     es_api_key: Optional[str] = None

@@ -37,15 +37,16 @@ _checked_unavailable = False
 
 def _build_client() -> Optional[AsyncElasticsearch]:
     settings = get_settings()
-    if settings.es_cloud_id and settings.es_api_key:
-        return AsyncElasticsearch(cloud_id=settings.es_cloud_id, api_key=settings.es_api_key)
-    if settings.es_url:
-        kwargs: dict[str, Any] = {"hosts": [settings.es_url]}
+    endpoint = settings.es_endpoint or settings.es_url
+    if endpoint:
+        kwargs: dict[str, Any] = {"hosts": [endpoint]}
         if settings.es_api_key:
             kwargs["api_key"] = settings.es_api_key
         elif settings.es_username and settings.es_password:
             kwargs["basic_auth"] = (settings.es_username, settings.es_password)
         return AsyncElasticsearch(**kwargs)
+    if settings.es_cloud_id and settings.es_api_key:
+        return AsyncElasticsearch(cloud_id=settings.es_cloud_id, api_key=settings.es_api_key)
     return None
 
 
