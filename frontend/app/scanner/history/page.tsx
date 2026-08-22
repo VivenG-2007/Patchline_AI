@@ -153,21 +153,22 @@ export default function ScanHistoryPage() {
           <div className="h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={velocitySeries} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" vertical={false} />
-                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} width={30} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="0" stroke="rgba(168,85,247,0.08)" vertical={false} />
+                <XAxis dataKey="day" stroke="var(--muted-2)" fontSize={11} tickLine={false} axisLine={false} fontFamily="var(--font-mono)" />
+                <YAxis stroke="var(--muted-2)" fontSize={11} tickLine={false} axisLine={false} width={30} allowDecimals={false} fontFamily="var(--font-mono)" />
                 <Tooltip
                   contentStyle={{
-                    background: 'var(--bg-card)',
-                    borderColor: 'var(--border-hover)',
-                    borderRadius: 8,
+                    background: '#17141C',
+                    borderColor: '#302A38',
+                    borderRadius: 10,
                     fontSize: 12,
-                    color: 'var(--text-primary)',
+                    color: '#F4F1F7',
+                    fontFamily: 'var(--font-mono)',
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
-                <Bar dataKey="found" name="Vulnerabilities Found" fill="var(--accent-amber)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="fixed" name="Patches Verified" fill="var(--accent-emerald)" radius={[4, 4, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: 11, color: '#9B93A5', fontFamily: 'var(--font-mono)', paddingTop: 10 }} />
+                <Bar dataKey="found" name="Vulnerabilities Found" fill="#EC4899" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="fixed" name="Patches Verified" fill="#22C55E" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
