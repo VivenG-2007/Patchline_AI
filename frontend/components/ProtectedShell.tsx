@@ -193,16 +193,26 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>
 
-      {/* Desktop Sidebar Layout Spacer — keeps main UI content perfectly offset at x=68px so content is NEVER overlapped */}
+      {/* Desktop Sidebar Layout Spacer — keeps main UI content perfectly offset at x=68px so content NEVER shifts */}
       <div className="hidden md:block shrink-0 w-[68px] min-h-screen pointer-events-none" />
 
-      {/* Desktop Sidebar — fixed floating overlay */}
+      {/* Desktop Backdrop Dim & Blur Overlay on Sidebar Slide-Out */}
+      <div
+        className={`hidden md:block fixed inset-0 z-30 transition-all duration-300 ease-in-out pointer-events-none ${
+          sidebarExpanded
+            ? 'opacity-100 bg-black/25 dark:bg-black/50 backdrop-blur-[2px]'
+            : 'opacity-0 bg-transparent'
+        }`}
+      />
+
+      {/* Desktop Floating Sidebar with Smooth Sliding Animation & Glassmorphism */}
       <aside
-        className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 z-40 overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarExpanded ? 'shadow-2xl ring-1 ring-black/10 dark:ring-white/10' : 'shadow-md'
+        className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 z-40 overflow-hidden backdrop-blur-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          sidebarExpanded
+            ? 'w-[230px] shadow-[0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-black/10 dark:ring-white/10'
+            : 'w-[68px] shadow-md'
         }`}
         style={{
-          width: sidebarExpanded ? 220 : 68,
           background: 'var(--sidebar-bg)',
           borderRight: '1px solid var(--border-divider)',
         }}
@@ -234,7 +244,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
               {user.email.slice(0, 1).toUpperCase()}
             </div>
             {sidebarExpanded && (
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 animate-fade-in">
                 <div className="text-[12px] font-mono truncate" style={{ color: 'var(--foreground)' }}>
                   {user.email}
                 </div>
@@ -245,7 +255,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
                 onClick={handleLogout}
                 aria-label="Log out"
                 title="Log out to landing page"
-                className="shrink-0 transition-colors p-1 rounded hover:bg-black/10 dark:hover:bg-white/10"
+                className="shrink-0 transition-colors p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 animate-fade-in"
                 style={{ color: 'var(--muted)' }}
               >
                 <LogOut size={13} strokeWidth={1.7} />
@@ -254,6 +264,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
           </div>
         </div>
       </aside>
+
 
       {/* Mobile nav drawer */}
       {mobileNavOpen && (
