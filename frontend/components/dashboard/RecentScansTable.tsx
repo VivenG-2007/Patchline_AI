@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { GitBranch, ChevronRight, ChevronLeft, CheckCircle2, Sparkles } from 'lucide-react';
+import { GitBranch, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import Card from '@/components/ui/Card';
 
 export interface RepoHealthItem {
@@ -21,6 +21,9 @@ interface RecentScansTableProps {
   pageSize?: number;
 }
 
+type SortField = 'repo' | 'riskLevel' | 'findings' | 'lastScan';
+type SortDir = 'asc' | 'desc';
+
 const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string }> = {
   Critical: { bg: 'rgba(244,63,94,0.10)',  border: 'rgba(244,63,94,0.25)',  color: '#F43F5E' },
   High:     { bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.25)', color: '#F97316' },
@@ -31,6 +34,7 @@ const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string
 const STATUS_DOT: Record<string, string> = {
   Healthy: '#22C55E',
   'Action Required': '#F43F5E',
+  'Review Fixes': '#EAB308',
   Warning: '#EAB308',
   Scanning: '#A855F7',
   Clean: '#22C55E',
@@ -59,11 +63,53 @@ function formatTime(iso: string) {
 
 export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const [sortField, setSortField] = useState<SortField>('lastScan');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const handleHeaderClick = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'));
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  };
+
+  const sortedItems = useMemo(() => {
+    const list = [...items];
+    const getTime = (iso?: string | null) => {
+      if (!iso) return 0;
+      const t = new Date(iso).getTime();
+      return isNaN(t) ? 0 : t;
+    };
+
+    list.sort((a, b) => {
+      let res = 0;
+      if (sortField === 'lastScan') {
+        res = getTime(a.lastScan) - getTime(b.lastScan);
+      } else if (sortField === 'repo') {
+        res = a.repo.localeCompare(b.repo);
+      } else if (sortField === 'findings') {
+        res = a.findings - b.findings;
+      } else if (sortField === 'riskLevel') {
+        const rank: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+        res = (rank[a.riskLevel] || 0) - (rank[b.riskLevel] || 0);
+      }
+      return sortDir === 'desc' ? -res : res;
+    });
+    return list;
+  }, [items, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / pageSize));
   const pagedItems = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return items.slice(start, start + pageSize);
-  }, [items, currentPage, pageSize]);
+    return sortedItems.slice(start, start + pageSize);
+  }, [sortedItems, currentPage, pageSize]);
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown size={10} className="inline opacity-40 ml-1" />;
+    return sortDir === 'desc' ? <ArrowDown size={10} className="inline text-primary ml-1" /> : <ArrowUp size={10} className="inline text-primary ml-1" />;
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -96,13 +142,33 @@ export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTab
                 borderBottom: '1px solid var(--border)',
               }}
             >
-              <th className="px-5 py-2.5 font-semibold">Repository</th>
-              <th className="px-4 py-2.5 font-semibold hidden sm:table-cell">Branch</th>
-              <th className="px-4 py-2.5 font-semibold">Severity</th>
-              <th className="px-4 py-2.5 font-semibold">Findings</th>
-              <th className="px-4 py-2.5 font-semibold hidden md:table-cell">Last Scanned</th>
-              <th className="px-4 py-2.5 font-semibold">Status</th>
-              <th className="px-5 py-2.5 font-semibold text-right">Actions</th>
+              <th
+                className="px-5 py-2.5 font-semibold cursor-pointer hover:text-foreground transition-colors select-none"
+                onClick={() => handleHeaderClick('repo')}
+              >
+                Repository <SortIcon field="repo" />
+              </th>
+              <th className="px-4 py-2.5 font-semibold hidden sm:table-cell select-none">Branch</th>
+              <th
+                className="px-4 py-2.5 font-semibold cursor-pointer hover:text-foreground transition-colors select-none"
+                onClick={() => handleHeaderClick('riskLevel')}
+              >
+                Severity <SortIcon field="riskLevel" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-semibold cursor-pointer hover:text-foreground transition-colors select-none"
+                onClick={() => handleHeaderClick('findings')}
+              >
+                Findings <SortIcon field="findings" />
+              </th>
+              <th
+                className="px-4 py-2.5 font-semibold hidden md:table-cell cursor-pointer hover:text-foreground transition-colors select-none"
+                onClick={() => handleHeaderClick('lastScan')}
+              >
+                Last Scanned <SortIcon field="lastScan" />
+              </th>
+              <th className="px-4 py-2.5 font-semibold select-none">Status</th>
+              <th className="px-5 py-2.5 font-semibold text-right select-none">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -138,7 +204,7 @@ export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTab
                           <GitBranch size={11} style={{ color: 'var(--muted)' }} />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-mono text-[12px] truncate" style={{ color: 'var(--foreground)' }}>
+                          <div className="font-mono text-[12px] truncate max-w-[220px]" style={{ color: 'var(--foreground)' }}>
                             {owner && <span style={{ color: 'var(--muted)' }}>{owner}/</span>}
                             {name}
                           </div>
@@ -164,7 +230,7 @@ export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTab
                     {/* Findings */}
                     <td className="px-4 py-3 font-mono text-[12px]">
                       {r.findings > 0 ? (
-                        <span style={{ color: '#F43F5E', fontWeight: 600 }}>{r.findings} issues</span>
+                        <span style={{ color: '#F43F5E', fontStyle: 'normal', fontWeight: 600 }}>{r.findings} issues</span>
                       ) : (
                         <span className="flex items-center gap-1" style={{ color: '#22C55E' }}>
                           <CheckCircle2 size={11} /> Clean

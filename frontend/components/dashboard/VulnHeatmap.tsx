@@ -14,25 +14,44 @@ const VULN_TYPES = [
 
 const WEEKS = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'];
 
-// Deterministic pseudo-random heat data (seeded by row+col so it's stable)
-function heatValue(row: number, col: number): number {
-  const seed = (row * 13 + col * 7 + row * col) % 17;
-  const patterns = [0,0,1,0,2,1,0,3,2,1,0,1,2,3,2,1,0];
-  return patterns[seed];
-}
-
 const HEAT_COLORS = ['#1B1720', '#241B2D', '#492052', '#7A247C', '#C026D3'];
-const HEAT_LABELS = ['None', 'Low', 'Medium', 'High', 'Critical'];
+const HEAT_LABELS = ['0 findings', 'Low', 'Medium', 'High', 'Critical'];
 
 interface Tooltip {
   row: number;
   col: number;
+  val: number;
   x: number;
   y: number;
 }
 
-export default function VulnHeatmap() {
+interface VulnHeatmapProps {
+  data?: { type: string; weeks: number[] }[];
+}
+
+export default function VulnHeatmap({ data }: VulnHeatmapProps) {
   const [tooltip, setTooltip] = useState<Tooltip | null>(null);
+
+  // Map incoming API data or default to 0 matrix
+  const matrix: Record<string, number[]> = {};
+  for (const t of VULN_TYPES) {
+    matrix[t] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  }
+  if (data && Array.isArray(data)) {
+    for (const item of data) {
+      if (matrix[item.type] && Array.isArray(item.weeks)) {
+        matrix[item.type] = item.weeks;
+      }
+    }
+  }
+
+  function getIntensity(count: number): number {
+    if (count <= 0) return 0;
+    if (count === 1) return 1;
+    if (count <= 3) return 2;
+    if (count <= 6) return 3;
+    return 4;
+  }
 
   return (
     <Card className="p-5">
@@ -49,7 +68,7 @@ export default function VulnHeatmap() {
 
         {/* Legend */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-mono" style={{ color: 'var(--muted-2)' }}>Less</span>
+          <span className="text-[10px] font-mono" style={{ color: 'var(--muted-2)' }}>0</span>
           {HEAT_COLORS.map((c, i) => (
             <span
               key={i}
@@ -57,7 +76,7 @@ export default function VulnHeatmap() {
               style={{ background: c }}
             />
           ))}
-          <span className="text-[10px] font-mono" style={{ color: 'var(--muted-2)' }}>More</span>
+          <span className="text-[10px] font-mono" style={{ color: 'var(--muted-2)' }}>High</span>
         </div>
       </div>
 
@@ -78,48 +97,50 @@ export default function VulnHeatmap() {
           </div>
 
           {/* Rows */}
-          {VULN_TYPES.map((vuln, row) => (
-            <div key={vuln} className="flex items-center mb-1">
-              {/* Row label */}
-              <div
-                className="w-20 shrink-0 text-[10px] font-mono text-right pr-3 truncate"
-                style={{ color: 'var(--muted)' }}
-              >
-                {vuln}
-              </div>
+          {VULN_TYPES.map((vuln, row) => {
+            const rowCounts = matrix[vuln] || [0,0,0,0,0,0,0,0,0,0,0,0];
+            return (
+              <div key={vuln} className="flex items-center mb-1">
+                <div
+                  className="w-20 shrink-0 text-[10px] font-mono text-right pr-3 truncate"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  {vuln}
+                </div>
 
-              {/* Cells */}
-              {WEEKS.map((_, col) => {
-                const val = heatValue(row, col);
-                const bg = HEAT_COLORS[val];
-                const isHovered = tooltip?.row === row && tooltip?.col === col;
+                {WEEKS.map((_, col) => {
+                  const count = rowCounts[col] || 0;
+                  const intensity = getIntensity(count);
+                  const bg = HEAT_COLORS[intensity];
+                  const isHovered = tooltip?.row === row && tooltip?.col === col;
 
-                return (
-                  <div
-                    key={col}
-                    className="flex-1 mx-0.5"
-                    style={{ position: 'relative' }}
-                    onMouseEnter={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setTooltip({ row, col, x: rect.left, y: rect.top });
-                    }}
-                    onMouseLeave={() => setTooltip(null)}
-                  >
+                  return (
                     <div
-                      className="rounded-sm transition-all duration-100"
-                      style={{
-                        height: 14,
-                        background: bg,
-                        border: isHovered ? '1px solid rgba(168,85,247,0.6)' : '1px solid transparent',
-                        transform: isHovered ? 'scale(1.15)' : 'scale(1)',
-                        cursor: 'default',
+                      key={col}
+                      className="flex-1 mx-0.5"
+                      style={{ position: 'relative' }}
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setTooltip({ row, col, val: count, x: rect.left, y: rect.top });
                       }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                      onMouseLeave={() => setTooltip(null)}
+                    >
+                      <div
+                        className="rounded-sm transition-all duration-100"
+                        style={{
+                          height: 14,
+                          background: bg,
+                          border: isHovered ? '1px solid rgba(168,85,247,0.6)' : '1px solid transparent',
+                          transform: isHovered ? 'scale(1.15)' : 'scale(1)',
+                          cursor: 'default',
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -145,7 +166,7 @@ export default function VulnHeatmap() {
               {WEEKS[tooltip.col]} — {VULN_TYPES[tooltip.row]}
             </div>
             <div style={{ color: '#C026D3' }}>
-              {HEAT_LABELS[heatValue(tooltip.row, tooltip.col)]} intensity
+              {tooltip.val} finding{tooltip.val === 1 ? '' : 's'} ({HEAT_LABELS[getIntensity(tooltip.val)]})
             </div>
           </div>
         </div>

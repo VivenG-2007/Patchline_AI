@@ -62,51 +62,16 @@ export default function ScanHistoryPage() {
       .history(50)
       .then(({ data }) => {
         const raw = data?.history ?? data ?? [];
-        if (Array.isArray(raw) && raw.length > 0) {
-          setRecords(raw);
+        if (Array.isArray(raw)) {
+          const getTime = (iso?: string | null) => {
+            if (!iso) return 0;
+            const t = new Date(iso).getTime();
+            return isNaN(t) ? 0 : t;
+          };
+          const sorted = [...raw].sort((a, b) => getTime(b.scannedAt) - getTime(a.scannedAt));
+          setRecords(sorted);
         } else {
-          // Provide fallback demo history
-          setRecords([
-            {
-              scanId: 'scn_9f82ab1',
-              repo: 'octocat/secure-api',
-              branch: 'main',
-              scannedAt: new Date(Date.now() - 3600000).toISOString(),
-              findingsCount: 2,
-              status: 'FIX_VERIFIED',
-              fixBranch: 'fix/patchline-cwe89-sqli',
-              fixedAt: new Date(Date.now() - 1800000).toISOString(),
-              findings: [
-                {
-                  id: 'FIND-001',
-                  title: 'SQL Injection in user query handler',
-                  severity: 'CRITICAL',
-                  file: 'src/controllers/userController.js',
-                  line: 42,
-                  description: 'Unsanitized string interpolation directly in db.query statement.',
-                  source: 'ai',
-                },
-                {
-                  id: 'FIND-002',
-                  title: 'XSS vulnerability in profile view render',
-                  severity: 'HIGH',
-                  file: 'src/views/profile.js',
-                  line: 88,
-                  description: 'Raw innerHTML assignment of user-supplied biography payload.',
-                  source: 'deterministic',
-                },
-              ],
-            },
-            {
-              scanId: 'scn_4c71ef8',
-              repo: 'acme/auth-service',
-              branch: 'main',
-              scannedAt: new Date(Date.now() - 86400000).toISOString(),
-              findingsCount: 0,
-              status: 'FIX_VERIFIED',
-              findings: [],
-            },
-          ]);
+          setRecords([]);
         }
       })
       .catch((err: any) => {

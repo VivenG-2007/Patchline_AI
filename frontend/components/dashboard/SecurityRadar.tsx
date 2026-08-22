@@ -18,17 +18,18 @@ interface SecurityRadarProps {
   data?: { axis: string; value: number }[];
 }
 
-const DEFAULT_DATA = [
-  { axis: 'Secrets',      value: 72 },
-  { axis: 'Injection',    value: 85 },
-  { axis: 'XSS',          value: 48 },
-  { axis: 'Crypto',       value: 35 },
-  { axis: 'Commands',     value: 60 },
-  { axis: 'Dependencies', value: 55 },
+const EMPTY_RADAR = [
+  { axis: 'Secrets',      value: 0 },
+  { axis: 'Injection',    value: 0 },
+  { axis: 'XSS',          value: 0 },
+  { axis: 'Crypto',       value: 0 },
+  { axis: 'Commands',     value: 0 },
+  { axis: 'Dependencies', value: 0 },
 ];
 
-export default function SecurityRadar({ data = DEFAULT_DATA }: SecurityRadarProps) {
+export default function SecurityRadar({ data }: SecurityRadarProps) {
   const mounted = useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
+  const radarData = data && data.length > 0 ? data : EMPTY_RADAR;
 
   return (
     <Card className="p-5">
@@ -52,7 +53,7 @@ export default function SecurityRadar({ data = DEFAULT_DATA }: SecurityRadarProp
       ) : (
         <div className="h-52">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
+            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="72%">
               <PolarGrid
                 stroke="rgba(168,85,247,0.12)"
                 gridType="polygon"

@@ -5,6 +5,12 @@ import Card from '@/components/ui/Card';
 import { Sparkles } from 'lucide-react';
 
 interface AIFixEngineProps {
+  data?: {
+    fixesGenerated?: number;
+    fixesVerified?: number;
+    prsCreated?: number;
+    verificationRate?: number;
+  };
   fixesGenerated?: number;
   fixesVerified?: number;
   prsCreated?: number;
@@ -27,19 +33,26 @@ function AnimatedNumber({ value, duration = 900 }: { value: number; duration?: n
 }
 
 export default function AIFixEngine({
-  fixesGenerated = 128,
-  fixesVerified = 117,
-  prsCreated = 94,
+  data,
+  fixesGenerated: fgProp,
+  fixesVerified: fvProp,
+  prsCreated: prProp,
 }: AIFixEngineProps) {
-  const verificationRate = Math.round((fixesVerified / fixesGenerated) * 100);
-  // SVG ring: circumference = 2π × 40 ≈ 251
+  const fixesGenerated = data?.fixesGenerated ?? fgProp ?? 0;
+  const fixesVerified = data?.fixesVerified ?? fvProp ?? 0;
+  const prsCreated = data?.prsCreated ?? prProp ?? 0;
+
+  const verificationRate =
+    data?.verificationRate ??
+    (fixesGenerated > 0 ? Math.round((fixesVerified / fixesGenerated) * 100) : 0);
+
   const circumference = 251;
   const dashOffset = circumference - (circumference * verificationRate) / 100;
 
   const stats = [
-    { label: 'Fixes Generated',     value: fixesGenerated,  color: '#A855F7' },
-    { label: 'Successfully Verified', value: fixesVerified, color: '#22C55E' },
-    { label: 'PRs Created',          value: prsCreated,     color: '#EC4899' },
+    { label: 'Fixes Generated',       value: fixesGenerated, color: '#A855F7' },
+    { label: 'Successfully Verified', value: fixesVerified,  color: '#22C55E' },
+    { label: 'PRs Created',           value: prsCreated,     color: '#EC4899' },
   ];
 
   return (
@@ -57,7 +70,7 @@ export default function AIFixEngine({
             AI Fix Engine
           </h2>
           <p className="text-[10px] font-mono mt-0.5" style={{ color: '#C026D3' }}>
-            ✦ PatchLine Intelligence Active
+            ✦ PatchLine Intelligence Telemetry
           </p>
         </div>
       </div>
@@ -67,14 +80,12 @@ export default function AIFixEngine({
         {/* SVG ring */}
         <div className="relative shrink-0" style={{ width: 96, height: 96 }}>
           <svg width="96" height="96" viewBox="0 0 96 96" style={{ transform: 'rotate(-90deg)' }}>
-            {/* Track */}
             <circle
               cx="48" cy="48" r="40"
               fill="none"
               stroke="#241B2D"
               strokeWidth="7"
             />
-            {/* Animated progress */}
             <circle
               cx="48" cy="48" r="40"
               fill="none"
@@ -95,7 +106,6 @@ export default function AIFixEngine({
               </linearGradient>
             </defs>
           </svg>
-          {/* Center label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="font-bold text-[18px] leading-none count-up" style={{ color: 'var(--foreground)' }}>
               {verificationRate}%
@@ -127,14 +137,14 @@ export default function AIFixEngine({
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>Verification Rate</span>
           <span className="text-[12px] font-mono font-semibold" style={{ color: '#22C55E' }}>
-            {verificationRate}.{Math.round((fixesVerified / fixesGenerated) * 1000) % 10}%
+            {verificationRate}%
           </span>
         </div>
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#241B2D' }}>
           <div
             className="h-full rounded-full transition-all duration-1000"
             style={{
-              width: `${verificationRate}%`,
+              width: `${Math.min(100, Math.max(0, verificationRate))}%`,
               background: 'linear-gradient(90deg, #A855F7, #C026D3, #EC4899)',
             }}
           />

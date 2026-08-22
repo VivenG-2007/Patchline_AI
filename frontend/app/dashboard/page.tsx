@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Sparkles, RefreshCw, ScanSearch, ShieldAlert } from 'lucide-react';
+import { Sparkles, RefreshCw, ScanSearch } from 'lucide-react';
 import ProtectedShell from '@/components/ProtectedShell';
 import EmptyState from '@/components/ui/EmptyState';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
@@ -29,7 +29,17 @@ interface DashboardStats {
   riskScoreSeries: { day: string; score: number; scans?: number; remediated?: number }[];
   activityFeed: { id: string; type: string; message: string; repo?: string; timestamp: string }[];
   repoHealth: RepoHealthItem[];
-  severityBreakdown: { critical: number; high: number; medium: number };
+  severityBreakdown: { critical: number; high: number; medium: number; low?: number };
+  aiFixEngine?: {
+    fixesGenerated: number;
+    fixesVerified: number;
+    prsCreated: number;
+    verificationRate: number;
+  };
+  vulnHeatmap?: { type: string; weeks: number[] }[];
+  reposAtRisk?: { name: string; critical: number; high: number; medium: number; low: number; total: number }[];
+  securityRadar?: { axis: string; value: number }[];
+  isElasticActive?: boolean;
 }
 
 const DEFAULT_FILTERS: FilterState = {
@@ -39,36 +49,22 @@ const DEFAULT_FILTERS: FilterState = {
   sortBy: 'recent',
 };
 
-const MOCK_STATS: DashboardStats = {
+const ZERO_STATS: DashboardStats = {
   kpis: {
-    connectedRepos: { value: 6, deltaLabel: '+2 this week' },
-    openFindings: { value: 14 },
-    criticalIssues: { value: 3 },
-    aiFixesApplied: { value: 9, windowLabel: '100% verified' },
+    connectedRepos: { value: 0, deltaLabel: null },
+    openFindings: { value: 0 },
+    criticalIssues: { value: 0 },
+    aiFixesApplied: { value: 0, windowLabel: null },
   },
-  globalRiskScore: 38,
-  riskScoreSeries: [
-    { day: 'Mon', score: 65, scans: 8,  remediated: 4 },
-    { day: 'Tue', score: 58, scans: 6,  remediated: 3 },
-    { day: 'Wed', score: 52, scans: 10, remediated: 6 },
-    { day: 'Thu', score: 44, scans: 9,  remediated: 5 },
-    { day: 'Fri', score: 40, scans: 12, remediated: 8 },
-    { day: 'Sat', score: 38, scans: 4,  remediated: 2 },
-    { day: 'Sun', score: 32, scans: 5,  remediated: 4 },
-  ],
-  activityFeed: [
-    { id: '1', type: 'fix_verified', message: 'GPT-5.2 patch verified for SQL Injection flaw', repo: 'octocat/secure-api', timestamp: new Date().toISOString() },
-    { id: '2', type: 'scan_completed', message: 'Deterministic + Semgrep scan completed: 0 regressions', repo: 'acme/auth-service', timestamp: new Date(Date.now() - 3600000).toISOString() },
-  ],
-  repoHealth: [
-    { repo: 'octocat/secure-api',         branch: 'main',    riskLevel: 'Critical', findings: 3, lastScan: new Date().toISOString(),                      status: 'Action Required' },
-    { repo: 'acme/core-gateway',          branch: 'main',    riskLevel: 'High',     findings: 4, lastScan: new Date(Date.now() - 7200000).toISOString(),   status: 'Action Required' },
-    { repo: 'enterprise/payment-hub',     branch: 'develop', riskLevel: 'Medium',   findings: 5, lastScan: new Date(Date.now() - 14400000).toISOString(),  status: 'Warning' },
-    { repo: 'acme/auth-service',          branch: 'main',    riskLevel: 'Low',      findings: 0, lastScan: new Date(Date.now() - 28800000).toISOString(),  status: 'Healthy' },
-    { repo: 'patchline/telemetry-engine', branch: 'prod',    riskLevel: 'Low',      findings: 2, lastScan: new Date(Date.now() - 86400000).toISOString(),  status: 'Healthy' },
-    { repo: 'internal/crypto-vault',      branch: 'main',    riskLevel: 'Low',      findings: 0, lastScan: new Date(Date.now() - 172800000).toISOString(), status: 'Healthy' },
-  ],
-  severityBreakdown: { critical: 3, high: 5, medium: 6 },
+  globalRiskScore: 0,
+  riskScoreSeries: [],
+  activityFeed: [],
+  repoHealth: [],
+  severityBreakdown: { critical: 0, high: 0, medium: 0, low: 0 },
+  aiFixEngine: { fixesGenerated: 0, fixesVerified: 0, prsCreated: 0, verificationRate: 0 },
+  vulnHeatmap: [],
+  reposAtRisk: [],
+  securityRadar: [],
 };
 
 export default function DashboardPage() {
@@ -84,9 +80,13 @@ export default function DashboardPage() {
     setError(null);
     try {
       const { data } = await mainApi.get('/api/proxy/api/v1/dashboard/stats');
-      setStats(data);
-    } catch {
-      setStats(MOCK_STATS);
+      setStats(data || ZERO_STATS);
+    } catch (err: any) {
+      setStats(ZERO_STATS);
+      setError(
+        err?.response?.data?.error?.message ??
+          'Failed to load live telemetry from Elastic / MongoDB services.'
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -99,24 +99,43 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [load]);
 
+  // Client-side filtering & sorting by Date, Risk, or Findings
   const filteredRepos = useMemo(() => {
     if (!stats?.repoHealth) return [];
     let list = [...stats.repoHealth];
+
     if (filters.searchQuery.trim()) {
       const q = filters.searchQuery.toLowerCase();
       list = list.filter(
-        (r) => r.repo.toLowerCase().includes(q) || r.branch.toLowerCase().includes(q) || r.status.toLowerCase().includes(q)
+        (r) =>
+          r.repo.toLowerCase().includes(q) ||
+          r.branch.toLowerCase().includes(q) ||
+          r.status.toLowerCase().includes(q)
       );
     }
-    if (filters.status !== 'ALL')   list = list.filter((r) => r.status.toLowerCase() === filters.status.toLowerCase());
-    if (filters.severity !== 'ALL') list = list.filter((r) => r.riskLevel.toUpperCase() === filters.severity.toUpperCase());
+    if (filters.status !== 'ALL') {
+      list = list.filter((r) => r.status.toLowerCase() === filters.status.toLowerCase());
+    }
+    if (filters.severity !== 'ALL') {
+      list = list.filter((r) => r.riskLevel.toUpperCase() === filters.severity.toUpperCase());
+    }
+
+    const getTime = (iso?: string | null) => {
+      if (!iso) return 0;
+      const t = new Date(iso).getTime();
+      return isNaN(t) ? 0 : t;
+    };
+
     if (filters.sortBy === 'risk_desc') {
       const rank: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
       list.sort((a, b) => (rank[b.riskLevel] || 0) - (rank[a.riskLevel] || 0));
     } else if (filters.sortBy === 'findings_desc') {
       list.sort((a, b) => b.findings - a.findings);
+    } else if (filters.sortBy === 'oldest') {
+      list.sort((a, b) => getTime(a.lastScan) - getTime(b.lastScan));
     } else {
-      list.sort((a, b) => new Date(b.lastScan).getTime() - new Date(a.lastScan).getTime());
+      // recent / date_desc
+      list.sort((a, b) => getTime(b.lastScan) - getTime(a.lastScan));
     }
     return list;
   }, [stats?.repoHealth, filters]);
@@ -131,7 +150,7 @@ export default function DashboardPage() {
             style={{ color: 'var(--primary)' }}
           >
             <span className="w-1.5 h-1.5 rounded-full pulse-dot inline-block" style={{ background: 'var(--primary)' }} />
-            Security Control Center
+            Security Control Center {stats?.isElasticActive && '· Elastic Engine'}
           </div>
           <h1 className="font-sans font-bold text-[22px] leading-tight" style={{ color: 'var(--foreground)' }}>
             Security Overview
@@ -142,7 +161,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Refresh */}
           <button
             type="button"
             onClick={() => load(true)}
@@ -154,7 +172,6 @@ export default function DashboardPage() {
             {refreshing ? 'Syncing…' : 'Sync'}
           </button>
 
-          {/* Launch Scan CTA */}
           <Link href="/scanner">
             <button
               type="button"
@@ -194,9 +211,8 @@ export default function DashboardPage() {
           <DashboardMetrics
             kpis={stats.kpis}
             severityBreakdown={stats.severityBreakdown}
-            activePipelineCount={1}
-            clearanceRate={94.8}
-            averageFixTime="1.4 min"
+            activePipelineCount={stats.kpis.connectedRepos.value > 0 ? 1 : 0}
+            clearanceRate={stats.kpis.connectedRepos.value > 0 ? 100 : 0}
           />
 
           {/* ── Row 2: Hero chart (2/3) + Severity donut (1/3) ── */}
@@ -213,6 +229,7 @@ export default function DashboardPage() {
                 critical={stats.severityBreakdown.critical}
                 high={stats.severityBreakdown.high}
                 medium={stats.severityBreakdown.medium}
+                low={stats.severityBreakdown.low ?? 0}
                 globalRiskScore={stats.globalRiskScore}
               />
             </div>
@@ -220,21 +237,17 @@ export default function DashboardPage() {
 
           {/* ── Row 3: Vuln heatmap (1/2) + AI Fix engine (1/2) ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <VulnHeatmap />
-            <AIFixEngine
-              fixesGenerated={128}
-              fixesVerified={117}
-              prsCreated={94}
-            />
+            <VulnHeatmap data={stats.vulnHeatmap} />
+            <AIFixEngine data={stats.aiFixEngine} />
           </div>
 
           {/* ── Row 4: Repos at risk (1/2) + Security radar (1/2) ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <RepoAtRisk />
-            <SecurityRadar />
+            <RepoAtRisk repos={stats.reposAtRisk} />
+            <SecurityRadar data={stats.securityRadar} />
           </div>
 
-          {/* ── Row 5: Filters + Recent scans table ── */}
+          {/* ── Row 5: Filters & Recent scans table ── */}
           <div className="space-y-3">
             <DashboardFilters
               filters={filters}

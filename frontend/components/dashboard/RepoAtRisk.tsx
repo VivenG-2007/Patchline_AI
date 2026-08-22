@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Card from '@/components/ui/Card';
-import { FolderGit2 } from 'lucide-react';
+import { FolderGit2, CheckCircle2 } from 'lucide-react';
 
 interface RepoRisk {
   name: string;
@@ -13,20 +13,14 @@ interface RepoRisk {
   total: number;
 }
 
-const DEFAULT_REPOS: RepoRisk[] = [
-  { name: 'payments-api',       critical: 4, high: 12, medium: 5, low: 2, total: 23 },
-  { name: 'auth-service',       critical: 2, high: 7,  medium: 9, low: 4, total: 22 },
-  { name: 'frontend',           critical: 0, high: 4,  medium: 8, low: 6, total: 18 },
-  { name: 'ai-storage-service', critical: 3, high: 9,  medium: 3, low: 1, total: 16 },
-];
-
 const MAX_SQUARES = 24;
 
 function RiskBar({ repo }: { repo: RepoRisk }) {
+  const total = Math.max(1, repo.total);
   const squares = Array.from({ length: MAX_SQUARES }, (_, i) => {
-    const critThreshold = Math.round((repo.critical / repo.total) * MAX_SQUARES);
-    const highThreshold = Math.round(((repo.critical + repo.high) / repo.total) * MAX_SQUARES);
-    const medThreshold  = Math.round(((repo.critical + repo.high + repo.medium) / repo.total) * MAX_SQUARES);
+    const critThreshold = Math.round((repo.critical / total) * MAX_SQUARES);
+    const highThreshold = Math.round(((repo.critical + repo.high) / total) * MAX_SQUARES);
+    const medThreshold  = Math.round(((repo.critical + repo.high + repo.medium) / total) * MAX_SQUARES);
 
     if (i < critThreshold) return '#F43F5E';
     if (i < highThreshold) return '#F97316';
@@ -57,9 +51,9 @@ interface RepoAtRiskProps {
   repos?: RepoRisk[];
 }
 
-export default function RepoAtRisk({ repos = DEFAULT_REPOS }: RepoAtRiskProps) {
+export default function RepoAtRisk({ repos = [] }: RepoAtRiskProps) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 flex flex-col justify-between">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -82,27 +76,38 @@ export default function RepoAtRisk({ repos = DEFAULT_REPOS }: RepoAtRiskProps) {
       </div>
 
       {/* Repo list */}
-      <div className="space-y-4">
-        {repos.map((repo) => (
-          <div key={repo.name}>
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
-                <FolderGit2 size={12} style={{ color: 'var(--muted-2)', flexShrink: 0 }} />
-                <span className="font-mono text-[12px]" style={{ color: 'var(--foreground)' }}>
-                  {repo.name}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 font-mono text-[10px]">
-                {repo.critical > 0 && (
-                  <span style={{ color: '#F43F5E' }}>Crit: {repo.critical}</span>
-                )}
-                <span style={{ color: '#F97316' }}>High: {repo.high}</span>
-              </div>
-            </div>
-            <RiskBar repo={repo} />
+      {repos.length === 0 ? (
+        <div className="h-44 flex flex-col items-center justify-center text-center p-4">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+            style={{ background: 'rgba(34,197,94,0.10)', color: '#22C55E' }}>
+            <CheckCircle2 size={20} />
           </div>
-        ))}
-      </div>
+          <div className="text-[12px] font-medium" style={{ color: 'var(--foreground)' }}>Zero At-Risk Repositories</div>
+          <div className="text-[11px] mt-0.5" style={{ color: 'var(--muted-2)' }}>No critical or high severity vulnerabilities found.</div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {repos.map((repo) => (
+            <div key={repo.name}>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <FolderGit2 size={12} style={{ color: 'var(--muted-2)', flexShrink: 0 }} />
+                  <span className="font-mono text-[12px] truncate max-w-[220px]" style={{ color: 'var(--foreground)' }}>
+                    {repo.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 font-mono text-[10px]">
+                  {repo.critical > 0 && (
+                    <span style={{ color: '#F43F5E' }}>Crit: {repo.critical}</span>
+                  )}
+                  <span style={{ color: '#F97316' }}>High: {repo.high}</span>
+                </div>
+              </div>
+              <RiskBar repo={repo} />
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }

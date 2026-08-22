@@ -7,7 +7,7 @@ export interface FilterState {
   searchQuery: string;
   status: string;
   severity: string;
-  sortBy: 'recent' | 'risk_desc' | 'findings_desc';
+  sortBy: 'recent' | 'oldest' | 'risk_desc' | 'findings_desc';
 }
 
 interface DashboardFiltersProps {
@@ -78,6 +78,7 @@ export default function DashboardFilters({
               <option value="ALL">All Statuses</option>
               <option value="Healthy">Healthy</option>
               <option value="Action Required">Action Required</option>
+              <option value="Review Fixes">Review Fixes</option>
               <option value="Warning">Warning</option>
             </select>
             <Filter size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--muted-2)' }} />
@@ -108,7 +109,8 @@ export default function DashboardFilters({
               }
               style={selectStyle}
             >
-              <option value="recent">Most Recent</option>
+              <option value="recent">Newest First (Date ↓)</option>
+              <option value="oldest">Oldest First (Date ↑)</option>
               <option value="risk_desc">Risk: High → Low</option>
               <option value="findings_desc">Findings Count</option>
             </select>
