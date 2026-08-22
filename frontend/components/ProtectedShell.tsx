@@ -176,8 +176,17 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
     router.push('/');
   };
 
-  if (loading) {
-    return <LoadingScreen title="Signing you in…" subtitle="Verifying your session and loading your workspace." durationMs={1400} />;
+  const [showLoading, setShowLoading] = useState(true);
+
+  if (loading || showLoading) {
+    return (
+      <LoadingScreen
+        title="Initializing Workspace…"
+        subtitle="Verifying session credentials & loading security telemetry."
+        durationMs={2400}
+        onComplete={() => setShowLoading(false)}
+      />
+    );
   }
   if (!user) return null;
 
