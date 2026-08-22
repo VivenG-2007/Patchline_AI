@@ -10,6 +10,11 @@ const logger = require('./config/logger');
 const redis = require('./config/redis');
 const requestId = require('./middleware/requestId');
 const { generalLimiter } = require('./middleware/rateLimiter');
+const { errorHandler, notFound } = require('./middleware/errorHandler');
+const proxyRoutes = require('./routes/proxyRoutes');
+const jiraRoutes = require('./routes/jiraRoutes');
+const githubRoutes = require('./routes/githubRoutes');
+const scannerRoutes = require('./routes/scannerRoutes');
 
 const app = express();
 app.set('trust proxy', 1);
