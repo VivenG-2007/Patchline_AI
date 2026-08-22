@@ -1,12 +1,10 @@
-# Deployment
+# Deployment Guide
 
-## Azure — the three backend services
+## Azure — Backend Services Setup
 
-Each of `services/auth-service`, `services/main-service`, `services/ai-storage-service` deploys
-independently to its own **Azure App Service** (Linux). auth-service and main-service run
-natively on the **Node 18** App Service runtime; ai-storage-service is **Python/FastAPI** and
-is deployed as a **container** (Web App for Containers) using its Dockerfile, since it runs
-under gunicorn with multiple uvicorn workers rather than Azure's built-in Python runtime.
+Each of `services/auth-service`, `services/main-service`, and `services/ai-storage-service` deploys independently to its own **Azure App Service** (Linux).
+- `auth-service` and `main-service` run natively on the **Node 18** App Service runtime.
+- `ai-storage-service` is **Python / FastAPI** and deploys as a **Web App for Containers** using its Dockerfile (gunicorn + uvicorn workers).
 
 ### 1. Create the App Services
 
@@ -20,8 +18,7 @@ for svc in auth main; do
     --plan "plan-$svc" --runtime "NODE:18-lts"
 done
 
-# ai-storage-service: Web App for Containers, pointed at a placeholder image —
-# the GitHub Actions workflow (docs § 4 below) overwrites this on every deploy
+# ai-storage-service: Web App for Containers
 az appservice plan create --name "plan-ai-storage" --resource-group hackathon-rg --sku B1 --is-linux
 az webapp create --name "your-ai-storage-service" --resource-group hackathon-rg \
   --plan "plan-ai-storage" --deployment-container-image-name "mcr.microsoft.com/appsvc/staticsite:latest"
@@ -29,14 +26,12 @@ az webapp config appsettings set --name "your-ai-storage-service" --resource-gro
   --settings WEBSITES_PORT=5002
 ```
 
-Recommended SKU:
+> [!TIP]
+> **Recommended Azure SKUs**:
+> - **B1 / B2** for `auth-service` and `ai-storage-service`.
+> - **P0v3 / P1v3** (Premium v3) for `main-service` when benchmarking high request throughput (~3,000 req/s target).
 
-- **B1/B2** for auth-service and ai-storage-service — bursty, not latency-critical
-- **P0v3 / P1v3** (Premium v3) for main-service if you're pushing toward the ~3k req/s
-  benchmark target in `docs/load-testing.md` — v3-series gives you a dedicated vCPU class
-  and better autoscale headroom than the B-series burstable plans
-
-### 2. Configure autoscaling (main-service)
+### 2. Configure Autoscaling (main-service)
 
 ```bash
 az monitor autoscale create --resource-group hackathon-rg \
@@ -48,13 +43,11 @@ az monitor autoscale rule create --resource-group hackathon-rg \
   --condition "CpuPercentage > 70 avg 5m" --scale out 2
 ```
 
-Stateless design (no in-memory session state, Redis-backed rate limiting) means main-service
-can scale horizontally without sticky sessions.
+Stateless design (no in-memory session state, Redis-backed rate limiting) allows `main-service` to scale horizontally without sticky sessions.
 
-### 3. Environment variables
+### 3. Environment Variables
 
-Set each service's `.env.example` keys via `az webapp config appsettings set` or the Portal's
-Configuration blade — **never** commit `.env` files. Example:
+Set each service's variables using `az webapp config appsettings set` or via the Azure Portal Configuration blade.
 
 ```bash
 az webapp config appsettings set --name your-auth-service --resource-group hackathon-rg \
@@ -62,12 +55,14 @@ az webapp config appsettings set --name your-auth-service --resource-group hacka
              MONGODB_URI="mongodb+srv://..."
 ```
 
-### 4. GitHub Actions (included, path-filtered)
+> [!CAUTION]
+> Never commit `.env` files containing real production credentials to Git repositories.
 
-`.github/workflows/deploy-<service>.yml` deploys each service only when its own folder
-changes, using Azure's OIDC federated login (no long-lived client secret in GitHub).
+### 4. GitHub Actions (Path-Filtered CI/CD)
 
-To set up the federated credential on your App Registration:
+The repo includes path-filtered deployment workflows under `.github/workflows/deploy-<service>.yml`. Each workflow deploys only when files within its target service folder change.
+
+To configure Azure OIDC federated credentials for GitHub Actions:
 
 ```bash
 az ad app federated-credential create --id <app-registration-object-id> --parameters '{
@@ -78,71 +73,55 @@ az ad app federated-credential create --id <app-registration-object-id> --parame
 }'
 ```
 
-**Known gotcha:** if GitHub appends a numeric suffix to your org/repo name during a rename
-grace period, the OIDC `sub` claim GitHub sends won't match the subject you registered
-(`AADSTS700213`). Check the exact repo name GitHub is currently using and re-create the
-federated credential with that suffixed value if you hit this.
+> [!WARNING]
+> **Known OIDC Gotcha (`AADSTS700213`)**: If GitHub appends a numeric suffix to your org or repository name during a rename grace period, the `sub` claim sent by GitHub will differ from the registered subject. Re-create the federated credential with the suffixed subject value if authentication fails.
 
-Add these repository secrets per service (`AUTH_SERVICE_...`, `MAIN_SERVICE_...`,
-`AI_STORAGE_SERVICE_...`): `AZURE_CLIENT_ID`, `AZURE_APP_NAME`, plus shared
-`AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` / `AZURE_RESOURCE_GROUP`.
+Add the following repository secrets per service:
+- `AZURE_CLIENT_ID`, `AZURE_APP_NAME`
+- Shared: `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`
 
-**ai-storage-service's workflow is container-based**, not a plain code deploy: it builds the
-Dockerfile, pushes the image to GitHub Container Registry (`ghcr.io`, using the automatic
-`GITHUB_TOKEN` — no extra registry credentials needed), then points the App Service at the new
-image tag with `az webapp config container set` and restarts it. This needs the App Service
-to already exist as "Web App for Containers" (step 1 above) — the workflow deploys new images
-to it, it doesn't create the App Service itself.
+`ai-storage-service` builds its Dockerfile, pushes the container image to GitHub Container Registry (`ghcr.io`), and updates App Service container configuration via `az webapp config container set`.
 
-### 5. Health checks & monitoring
+---
 
-- Point Azure's built-in Health Check (Portal → Monitoring → Health check) at `/health` for
-  each App Service so unhealthy instances are cycled out automatically
-- Enable Application Insights on each App Service for request timing, dependency tracking,
-  and to visualize the `x-request-id` you'll see in the structured pino logs
-- `/ready` reflects actual dependency state (Mongo/Redis connectivity) — use it for readiness
-  gates, `/health` for liveness
+### 5. Health Checks & Monitoring
 
-### 6. Custom domains & HTTPS
+- Enable **Azure Health Check** (Portal → Monitoring → Health check) pointing to `/health` on each service.
+- Enable **Application Insights** to track request timings, dependency latency, and correlate `x-request-id` headers across services.
+- Use `/ready` for readiness probes (reporting live MongoDB/Redis connectivity) and `/health` for liveness probes.
 
-App Service provisions a free managed certificate for custom domains
-(`az webapp config ssl create --hostname ... `). Since the frontend (Vercel) and backends
-(Azure) are different origins, cookies must be `SameSite=None; Secure` (already the default
-in `services/auth-service/.env.example`) — this requires HTTPS on both sides, which Azure App
-Service and Vercel both provide by default.
+---
 
-### 7. Deployment slots
+### 6. Custom Domains & HTTPS
 
-For zero-downtime deploys, add a `staging` slot per App Service and swap after a smoke test:
+App Service provisions managed SSL/TLS certificates for custom domain bindings.
+Because the frontend (Vercel) and backend services (Azure) run on separate domain origins, authentication cookies must be configured with `SameSite=None; Secure`, requiring HTTPS on all environments.
+
+---
+
+### 7. Deployment Slots
+
+For zero-downtime deployments, configure a `staging` slot and swap after verification:
 
 ```bash
 az webapp deployment slot create --name your-main-service --resource-group hackathon-rg --slot staging
-# deploy to slot, verify /health, then:
+# Deploy build to staging slot, verify /health response, then swap:
 az webapp deployment slot swap --name your-main-service --resource-group hackathon-rg --slot staging
 ```
 
-### 8. Scanner workers as their own scalable service
+---
 
-By default, main-service's scan/fix BullMQ workers run in-process with the API
-(`DISABLE_INLINE_WORKERS=false`) — the simplest thing that works, and fine for low
-volume. But it means scaling scan throughput and scaling API request throughput are
-the same lever: an autoscale rule tuned for HTTP CPU load (§2 above) isn't the same
-shape as what a burst of 50 webhook-triggered scans needs, and vice versa. The same
-`main-service` Docker image already supports running as a **standalone worker
-process** instead — `node src/worker.js` (or `npm run worker`) — with no code
-changes, so this is a deployment-topology decision, not a development one.
+### 8. Standalone Scanner Worker Service
 
-**Locally**, `docker-compose.yml` already runs this as its own `worker` service
-(alongside main-service's inline workers, not instead of them — BullMQ is built for
-multiple concurrent consumers on one queue). Scale it with:
+`main-service` supports running standalone BullMQ workers (`node src/worker.js` / `npm run worker`) outside of the API server process (`DISABLE_INLINE_WORKERS=true`).
 
+**Local Compose Setup:**
 ```bash
 docker compose up --scale worker=4
 ```
 
-**On Azure**, deploy it as a fourth App Service, same runtime as main-service, with
-its startup command overridden and inline workers on the API turned off so scan
-capacity isn't accidentally double-counted or duplicated across both:
+**Azure Production Setup:**
+Deploy a separate App Service instance dedicated to background queue processing:
 
 ```bash
 az appservice plan create --name plan-worker --resource-group hackathon-rg --sku B1 --is-linux
@@ -153,88 +132,45 @@ az webapp config set --name your-scanner-worker --resource-group hackathon-rg \
 az webapp config appsettings set --name your-scanner-worker --resource-group hackathon-rg \
   --settings REDIS_URL="..." AI_STORAGE_SERVICE_URL="..." INTERNAL_SERVICE_TOKEN="..." \
              SCAN_WORKER_CONCURRENCY=5 FIX_WORKER_CONCURRENCY=4
-# The worker process makes no inbound HTTP calls of its own, so it doesn't need a
-# public health-check endpoint the way the other App Services do — Azure's
-# "Always On" setting (not the /health check) is what keeps it running.
 az webapp config set --name your-scanner-worker --resource-group hackathon-rg --always-on true
 
-# Then turn off main-service's inline workers, since the standalone worker now
-# owns the scan/fix queues:
+# Disable inline workers on the main HTTP API service:
 az webapp config appsettings set --name your-main-service --resource-group hackathon-rg \
   --settings DISABLE_INLINE_WORKERS=true
-
-# Autoscale the worker plan on queue depth rather than CPU — a scan job is I/O-bound
-# (mostly waiting on ai-storage-service/the AI provider), so CPU on the worker
-# process itself is a poor proxy for "is there a backlog." A Redis-list-length-based
-# custom metric is more accurate if you have Application Insights wired up; a
-# time-based or coarse CPU rule is a reasonable placeholder until then:
-az monitor autoscale create --resource-group hackathon-rg \
-  --resource "your-scanner-worker" --resource-type Microsoft.Web/sites \
-  --name worker-autoscale --min-count 1 --max-count 6 --count 2
-az monitor autoscale rule create --resource-group hackathon-rg \
-  --autoscale-name worker-autoscale \
-  --condition "CpuPercentage > 60 avg 5m" --scale out 1
 ```
 
-**Sizing SCAN_WORKER_CONCURRENCY / FIX_WORKER_CONCURRENCY:** real scan throughput is
-`(worker instance count) × (concurrency per instance)`, not concurrency alone — more,
-smaller workers survive a single instance restarting without losing all in-flight
-capacity, the way more replicas of any stateless service do. But each concurrent scan
-job also fans out into its own bounded AI-provider call concurrency inside
-ai-storage-service (`_AI_BATCH_CONCURRENCY` / the `asyncio.Semaphore(6)` in
-`app/routers/scanner.py`, currently 4–6). So (worker count) × (concurrency) × (~6) is
-roughly your peak concurrent AI-provider call count across the whole deployment —
-check that against your actual OpenAI/Azure OpenAI rate limit tier before scaling
-workers up aggressively; the failure mode of over-scaling here is 429s from the AI
-provider, not from Patchline itself.
+> [!NOTE]
+> Worker throughput equals `(instance_count) × (concurrency_per_instance)`. Ensure your configured concurrency aligns with upstream AI provider rate limits.
 
-## OAuth app registration (Jira, GitHub — optional integrations)
+---
 
-Both integrations need one shared piece of setup first: generate
-`OAUTH_TOKEN_ENCRYPTION_KEY_BASE64` with `openssl rand -base64 32` and set it on main-service
-— this one key encrypts stored tokens for both providers.
+## Third-Party Integration Setup
 
-### Jira
+Both integrations require `OAUTH_TOKEN_ENCRYPTION_KEY_BASE64` to be set on `main-service` (generate with `openssl rand -base64 32`).
 
-Register an OAuth 2.0 (3LO) app once at https://developer.atlassian.com/console/myapps/ :
+### Jira Integration Setup
 
-1. Create app → "OAuth 2.0 integration"
-2. **Permissions** → add the Jira API scopes: `read:jira-work`, `write:jira-work`,
-   `read:jira-user`, `offline_access` (the last one is what makes Jira issue a refresh token)
-3. **Authorization** → set the callback URL to your deployed main-service's exact URL:
-   `https://your-main-service.azurewebsites.net/api/jira/oauth/callback` — this must match
-   `JIRA_REDIRECT_URI` byte-for-byte, including scheme and trailing slash
-4. Copy the **Client ID** and **Secret** into main-service's `JIRA_CLIENT_ID` /
-   `JIRA_CLIENT_SECRET`
-5. Create the `jira_connections` table in Supabase — the `create table` statement is in
-   `docs/security.md`
+1. Register an OAuth 2.0 (3LO) App at [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/).
+2. Add Jira API scopes: `read:jira-work`, `write:jira-work`, `read:jira-user`, `offline_access`.
+3. Set callback URL: `https://your-main-service.azurewebsites.net/api/jira/oauth/callback` (must match `JIRA_REDIRECT_URI` exactly).
+4. Configure `JIRA_CLIENT_ID` and `JIRA_CLIENT_SECRET` in `main-service`.
+5. Execute Supabase `jira_connections` table migration script (see [`docs/security.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/security.md)).
 
-### GitHub
+### GitHub Integration Setup
 
-Register an OAuth App once at https://github.com/settings/developers → "New OAuth App":
+1. Register a new OAuth App at [GitHub Developer Settings](https://github.com/settings/developers).
+2. Set Homepage URL to frontend URL (`https://your-app.vercel.app`).
+3. Set Authorization Callback URL: `https://your-main-service.azurewebsites.net/api/github/oauth/callback` (must match `GITHUB_REDIRECT_URI` exactly).
+4. Configure `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` in `main-service`.
+5. Execute Supabase `github_connections` table migration script (see [`docs/security.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/security.md)).
 
-1. **Homepage URL** → your frontend's deployed URL (e.g. `https://your-app.vercel.app`)
-2. **Authorization callback URL** → your deployed main-service's exact URL:
-   `https://your-main-service.azurewebsites.net/api/github/oauth/callback` — must match
-   `GITHUB_REDIRECT_URI` byte-for-byte
-3. Copy the **Client ID** and generate a **Client Secret**, set them as `GITHUB_CLIENT_ID` /
-   `GITHUB_CLIENT_SECRET`
-4. Create the `github_connections` table in Supabase — the `create table` statement is in
-   `docs/security.md`
-5. Unlike Jira, there's no refresh-token setup step — classic GitHub OAuth App tokens don't
-   expire
+---
 
-If you switch environments (localhost → staging → prod), each provider needs its **own**
-registration or at least its own callback URL added to the same app — `JIRA_REDIRECT_URI` /
-`GITHUB_REDIRECT_URI` each only ever point at one URL at a time.
+## Vercel — Frontend Deployment
 
-## Vercel — the frontend
-
-1. Import the repo in Vercel, set the **root directory** to `frontend/`
-2. Add environment variables (Project Settings → Environment Variables):
-   - `NEXT_PUBLIC_AUTH_API_URL` = your deployed auth-service URL
-   - `NEXT_PUBLIC_MAIN_API_URL` = your deployed main-service URL
-   - `JWT_PUBLIC_KEY_BASE64`, `JWT_ISSUER`, `JWT_AUDIENCE` — server-only, used by `middleware.ts`
-     for edge route protection (never prefixed `NEXT_PUBLIC_`, so it never reaches the browser
-     bundle — safe to store since it's the *public* key)
-3. Vercel auto-deploys on push to `main`; no extra workflow file needed
+1. Import the repository into Vercel and set the **Root Directory** to `frontend/`.
+2. Configure project Environment Variables:
+   - `NEXT_PUBLIC_AUTH_API_URL` = URL of deployed `auth-service`
+   - `NEXT_PUBLIC_MAIN_API_URL` = URL of deployed `main-service`
+   - `JWT_PUBLIC_KEY_BASE64`, `JWT_ISSUER`, `JWT_AUDIENCE` (server-side edge middleware protection)
+3. Vercel automatically deploys updates pushed to the `main` branch.

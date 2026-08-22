@@ -58,8 +58,8 @@ chromadb==1.5.9
 # step. manylinux wheels (this service's python:3.12-slim/Debian base) are
 # fully supported — Alpine/musl images are NOT, if the base image ever
 # changes.
-semgrep==1.99.0
-
+#semgrep==1.99.0
+semgrep==1.60.0 
 # AST engine — the deterministic scanner's third, in-process pass
 # (app/services/scanning/treesitter_engine.py). tree-sitter is the core
 # parser/bindings library; tree-sitter-language-pack ships prebuilt grammars

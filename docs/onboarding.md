@@ -1,101 +1,60 @@
-# Onboarding — new team member
+# Onboarding Guide
 
-Read this once, top to bottom, before touching code. It'll save you from re-asking
-questions that are already answered here or in the linked docs.
+Welcome to the team! Read this guide top-to-bottom before starting development.
 
-## What this project is
+## 1. Project Overview
 
-One frontend + three independent backends, already wired together with auth, caching,
-databases, and file storage. You are **not** building infrastructure this weekend — you're
-building on top of infrastructure that already works. Your job is almost entirely in:
+Patchline consists of **1 Next.js frontend + 3 independent backend microservices**, pre-wired with authentication, caching, database connections, and file storage.
 
-- `frontend/app/` — the UI
-- `services/main-service/src/controllers/` — your product's core logic
-- `services/ai-storage-service/app/routers/ai.py` — your AI use case (Python/FastAPI)
+> [!NOTE]
+> Most feature development takes place in:
+> - `frontend/app/` — User interface pages and components
+> - `services/main-service/src/` — Business logic, routes, and background workers
+> - `services/ai-storage-service/app/` — SAST scanner, AI fix generator, and RAG memory
 
-Everything else (JWT auth, rate limiting, CORS, Docker, deploy scripts) you should rarely
-need to touch. If you find yourself editing `middleware/auth.js` or anything in
-`auth-service`, stop and ask first — that's shared plumbing every service depends on.
+Shared infrastructure (JWT authentication signing/verification, Redis rate limiting, CORS configuration, Dockerfiles, GitHub Actions workflows) is already fully implemented.
 
-## Advantages of building on this template
+---
 
-**You skip the boring, error-prone setup work.** Auth alone (password hashing, token
-issuing, refresh rotation, secure cookies) is a multi-day task to get right and easy to get
-subtly wrong. It's already done and tested here.
+## 2. Getting Started (First 20 Minutes)
 
-**No single point of failure in auth.** Every backend verifies JWTs itself using a shared
-public key — none of them call auth-service to check if a token is valid. If auth-service
-goes down mid-hackathon, everyone who's already logged in keeps working. Only new logins are
-affected.
-
-**Adding a feature usually touches one service, not three.** Because main-service's AI/file
-proxy is a dumb forward (not a route registry), adding a new AI endpoint means editing
-ai-storage-service and the frontend — nothing else needs to "know" the route exists. See
-`docs/api.md` for the current route list.
-
-**Caching and rate limiting are already there.** Redis-backed response caching
-(`cacheResponse()`) and rate limiting are one line to add to any new route — you don't
-reinvent them per endpoint.
-
-**It's honest about performance, not hand-wavy.** The `~3k req/s` figure quoted anywhere in
-these docs is a *benchmark target*, not a guarantee — and `load-test/` has real scripts to
-measure your actual endpoints instead of trusting a marketing number.
-
-**Deploys are already scripted.** Push to `main` and GitHub Actions deploys the backend that
-changed (only that one, via path filters) to Azure. Vercel auto-deploys the frontend. Nobody
-should be manually SFTP-ing files anywhere.
-
-**It survives being handed off.** Every service is self-contained with its own
-`.env.example`, `Dockerfile`, and `package.json` — if this hackathon repo needs to be split
-apart or reused for a different project later, any one service folder can be lifted out and
-still runs.
-
-## Getting started (first 20 minutes)
-
-1. **Read `README.md` fully.** It's short and answers "how do I run this" completely.
-2. **Ask the team lead for the two things not in the repo:**
-   - The already-generated `JWT_PRIVATE_KEY_BASE64` / `JWT_PUBLIC_KEY_BASE64` pair (don't
-     regenerate your own — everyone must share the same keypair or nobody's tokens verify
-     against anybody else's running services)
-   - Supabase and MongoDB connection strings, and the Azure Blob connection string, if
-     they're already provisioned for this project
-3. **Clone, install, run:**
+1. **Read [`README.md`](file:///c:/Users/viven/Desktop/launchpadx/README.md) completely.**
+2. Obtain required environment variables from your team lead:
+   - Shared RS256 keypair (`JWT_PRIVATE_KEY_BASE64` and `JWT_PUBLIC_KEY_BASE64`)
+   - Supabase database credentials (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`)
+   - MongoDB connection string (`MONGODB_URI`)
+   - Azure Blob Storage connection string (`AZURE_STORAGE_CONNECTION_STRING`)
+3. **Install and launch services:**
    ```bash
-   git clone <repo> && cd patchline
+   git clone <repo-url> && cd patchline
    npm run install:all
-   # paste the shared keys into services/auth-service/.env,
-   # services/main-service/.env, and services/ai-storage-service/.env
-   npm run docker:up        # or npm run dev if you have local Mongo/Redis already
+   # Configure .env files in each service directory
+   npm run docker:up
    ```
-4. **Confirm it's alive:** open `http://localhost:3000` — the landing page's "Live status"
-   panel should show `auth-service` and `main-service` as online. If either shows
-   unreachable, something in step 3 is off — check that service's terminal output first.
-5. **Register a test account** through the UI and click around `/dashboard` and `/upload` —
-   this exercises all three backends end to end and confirms your local env is fully wired
-   before you start changing anything.
+4. **Verify installation:**
+   - Open `http://localhost:3000` in your browser.
+   - Confirm backend services report operational status.
+   - Register a test account and navigate to `/dashboard` and `/upload`.
 
-## Where to look things up
+---
 
-| Question | Read this |
+## 3. Quick Reference
+
+| Task / Question | Reference Document |
 |---|---|
-| "How does login actually work?" | `docs/architecture.md` § Request flow |
-| "What routes exist right now?" | `docs/api.md` |
-| "How do I add a new endpoint?" | `docs/api.md`, then mirror an existing controller/route pair in the relevant service |
-| "How do I deploy my change?" | `docs/deployment.md` |
-| "Is this secure enough to actually use?" | `docs/security.md` |
-| "How fast is this really?" | `docs/load-testing.md` — run the scripts yourself, don't guess |
-| "Something's broken and I don't know why" | `README.md` § Troubleshooting, then check `/health` and `/ready` on the service that's misbehaving |
+| "How does authentication work?" | [`docs/architecture.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/architecture.md) |
+| "What API routes are available?" | [`docs/api.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/api.md) |
+| "How do I deploy changes?" | [`docs/deployment.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/deployment.md) |
+| "What security controls are enforced?" | [`docs/security.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/security.md) |
+| "How do I load test endpoints?" | [`docs/load-testing.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/load-testing.md) |
+| "What is the current production state?" | [`docs/production-readiness.md`](file:///c:/Users/viven/Desktop/launchpadx/docs/production-readiness.md) |
 
-## Rules of thumb for this codebase specifically
+---
 
-- **Never commit a `.env` file.** Only `.env.example` files are meant to be in git. If you
-  accidentally commit real credentials, rotate them immediately, don't just delete the commit.
-- **Never put a database URI, service-role key, or the JWT private key in `frontend/`.**
-  Anything in `frontend/.env.local` ends up in the browser bundle unless it's the one
-  documented exception (`JWT_PUBLIC_KEY_BASE64`, used server-side only by `middleware.ts`).
-- **New route = new controller function + new route line**, mirroring what's already there.
-  Don't invent a new pattern for validation, error handling, or auth — copy the shape of an
-  existing route in the same file.
-- **If two of you are touching the same service at once, coordinate.** Nothing here prevents
-  merge conflicts; the services being independent doesn't mean two people editing
-  `ai-storage-service` simultaneously won't collide.
+## 4. Development Rules of Thumb
+
+> [!WARNING]
+> **Security & Secrets Rules:**
+> - Never commit `.env` files. Only `.env.example` templates belong in version control.
+> - Never put database URIs, service-role keys, or the JWT private key into `frontend/`.
+> - Only `NEXT_PUBLIC_*` variables are exposed to browser bundles. `JWT_PUBLIC_KEY_BASE64` is server-side only in `middleware.ts`.
