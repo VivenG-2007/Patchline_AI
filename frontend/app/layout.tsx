@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider, themeInitScript } from '@/context/ThemeContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/components/ToastNotification';
 
 const geist = Geist({
@@ -49,12 +49,14 @@ export const viewport: Viewport = {
   ],
 };
 
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('patchline_theme')||localStorage.getItem('patchline-theme');var m=s==='light'||s==='dark'||s==='system'?s:'dark';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;var root=document.documentElement;root.setAttribute('data-theme',r);root.setAttribute('data-theme-mode',m);if(r==='dark'){root.classList.add('dark');root.classList.remove('light')}else{root.classList.add('light');root.classList.remove('dark')}}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geist.variable} ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Anti-flicker pre-hydration script */}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="antialiased min-h-screen bg-bg-base text-text-primary" suppressHydrationWarning>
         <ThemeProvider>
