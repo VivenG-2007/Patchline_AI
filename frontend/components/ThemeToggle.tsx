@@ -29,6 +29,7 @@ export default function ThemeToggle({ className = '' }: { className?: string }) 
     <div className="relative inline-block" ref={menuRef}>
       <button
         type="button"
+        suppressHydrationWarning
         onClick={() => setDropdownOpen((prev) => !prev)}
         aria-label={`Current theme: ${theme}. Click to change theme.`}
         title={`Current theme: ${theme} (${resolvedTheme})`}
