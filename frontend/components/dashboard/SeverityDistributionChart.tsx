@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Card from '@/components/ui/Card';
 import { ShieldCheck } from 'lucide-react';
+
+const emptySubscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 interface SeverityDistributionProps {
   critical: number;
@@ -20,12 +24,8 @@ export default function SeverityDistributionChart({
   low = 0,
   globalRiskScore = 32,
 }: SeverityDistributionProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
   const total = critical + high + medium + low;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const data = [
     { name: 'Critical', value: critical, color: 'var(--accent-rose)', tone: 'text-accent-rose bg-accent-rose-soft' },

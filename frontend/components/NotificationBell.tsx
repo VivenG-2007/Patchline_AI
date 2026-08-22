@@ -41,33 +41,40 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const { data } = await mainApi.get('/api/proxy/api/v1/notifications');
-      setItems(data.notifications || []);
-      setUnreadCount(data.unreadCount || 0);
-    } catch {
-      // Offline fallback notifications
-      setItems([
-        {
-          id: 'n1',
-          type: 'success',
-          title: 'PR #42 Verified',
-          message: '0 regressions on octocat/secure-api',
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      setUnreadCount(1);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    load();
-    const interval = setInterval(load, 30000);
-    return () => clearInterval(interval);
-  }, [load]);
+    let active = true;
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await mainApi.get('/api/proxy/api/v1/notifications');
+        if (active) {
+          setItems(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        }
+      } catch {
+        if (active) {
+          setItems([
+            {
+              id: 'n1',
+              type: 'success',
+              title: 'PR #42 Verified',
+              message: '0 regressions on octocat/secure-api',
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+          setUnreadCount(1);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {

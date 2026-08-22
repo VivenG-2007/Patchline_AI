@@ -111,15 +111,14 @@ export function usePasswordStrength(
   const [settled, setSettled] = useState("");
 
   useEffect(() => {
-    if (state.announcement === "") {
-      setSettled("");
-      return;
-    }
+    if (!state.announcement) return;
     const id = setTimeout(() => setSettled(state.announcement), announceDelay);
     return () => clearTimeout(id);
   }, [state.announcement, announceDelay]);
 
-  return { ...state, announcement: settled };
+  const announcement = state.announcement ? settled : "";
+
+  return { ...state, announcement };
 }
 
 export type PasswordStrengthProps = {

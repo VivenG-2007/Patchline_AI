@@ -1,6 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
+
+const emptySubscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
 import {
   AreaChart,
   Area,
@@ -33,11 +37,7 @@ export default function ScanTrendsChart({
   subtitle = 'Continuous 7-day chronological telemetry',
 }: ScanTrendsChartProps) {
   const [viewMode, setViewMode] = useState<'risk' | 'volume'>('risk');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
 
   // Synthesize volumetric metrics if only risk score series is provided
   const chartData = data.map((item, idx) => ({

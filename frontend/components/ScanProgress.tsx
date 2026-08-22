@@ -21,8 +21,8 @@ interface ScanProgressProps {
  */
 export default function ScanProgress({ phase, repo }: ScanProgressProps) {
   const [elapsedMs, setElapsedMs] = useState(0);
-  const [log, setLog] = useState<string[]>([]);
-  const startRef = useRef(Date.now());
+  const [startTime] = useState(() => Date.now());
+  const startRef = useRef(startTime);
   const lastPhaseRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function ScanProgress({ phase, repo }: ScanProgressProps) {
         <div className="px-4 py-3 space-y-1 max-h-32 overflow-y-auto">
           {log.map((line, i) => (
             <div key={i} className="text-[12px] font-mono text-terminal-text animate-fade-rise-in">
-              <span className="text-terminal-muted">[{new Date(startRef.current + i * 400).toLocaleTimeString('en-US', { hour12: false })}]</span> {line}
+              <span className="text-terminal-muted">[{new Date(startTime + i * 400).toLocaleTimeString('en-US', { hour12: false })}]</span> {line}
             </div>
           ))}
           <div className="text-[12px] font-mono text-accent-strong">_ analyzing…</div>

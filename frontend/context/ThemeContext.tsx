@@ -22,26 +22,40 @@ function getSystemTheme(): ResolvedTheme {
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('dark');
+function applyThemeToDom(mode: ThemeMode, resolved: ResolvedTheme) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.setAttribute('data-theme', resolved);
+  root.setAttribute('data-theme-mode', mode);
+  if (resolved === 'dark') {
+    root.classList.add('dark');
+    root.classList.remove('light');
+  } else {
+    root.classList.add('light');
+    root.classList.remove('dark');
+  }
+}
 
-  // Initialize theme from DOM attribute / localStorage
-  useEffect(() => {
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') return 'dark';
     try {
       const stored = (localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)) as ThemeMode | null;
-      const initialMode: ThemeMode = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'dark';
-      const resolved = initialMode === 'system' ? getSystemTheme() : initialMode;
-      
-      setThemeState(initialMode);
-      setResolvedTheme(resolved);
-      
-      applyThemeToDom(initialMode, resolved);
+      return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'dark';
     } catch {
-      setThemeState('dark');
-      setResolvedTheme('dark');
+      return 'dark';
     }
-  }, []);
+  });
+
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    return theme === 'system' ? getSystemTheme() : theme;
+  });
+
+  // Apply theme attributes on mount & mode changes
+  useEffect(() => {
+    applyThemeToDom(theme, resolvedTheme);
+  }, [theme, resolvedTheme]);
 
   // Listen to OS system theme changes when mode is 'system'
   useEffect(() => {
@@ -50,42 +64,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const handler = (e: MediaQueryListEvent) => {
       const nextResolved = e.matches ? 'light' : 'dark';
       setResolvedTheme(nextResolved);
-      applyThemeToDom('system', nextResolved);
     };
 
     media.addEventListener('change', handler);
     return () => media.removeEventListener('change', handler);
   }, [theme]);
 
-  const applyThemeToDom = (mode: ThemeMode, resolved: ResolvedTheme) => {
-    const root = document.documentElement;
-    root.setAttribute('data-theme', resolved);
-    root.setAttribute('data-theme-mode', mode);
-    if (resolved === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-  };
-
   const setTheme = useCallback((next: ThemeMode) => {
     setThemeState(next);
     const resolved = next === 'system' ? getSystemTheme() : next;
     setResolvedTheme(resolved);
-    applyThemeToDom(next, resolved);
-
     try {
       localStorage.setItem(STORAGE_KEY, next);
-      localStorage.setItem(LEGACY_STORAGE_KEY, next);
     } catch {
-      /* localStorage unavailable (private mode etc.) */
+      // ignore
     }
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+    const next: ThemeMode = resolvedTheme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
   }, [resolvedTheme, setTheme]);
 
   return (
@@ -96,42 +94,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
-}
-
-// Inline anti-flicker script injected into <head> by layout.tsx
-export const themeInitScript = `
-(function() {
-  try {
-    var stored = localStorage.getItem('${STORAGE_KEY}') || localStorage.getItem('${LEGACY_STORAGE_KEY}');
-    var isDarkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var resolved = 'dark';
-    
-    if (stored === 'light') {
-      resolved = 'light';
-    } else if (stored === 'dark') {
-      resolved = 'dark';
-    } else if (stored === 'system') {
-      resolved = isDarkPreferred ? 'dark' : 'light';
-    } else {
-      resolved = isDarkPreferred ? 'dark' : 'dark';
-    }
-
-    var root = document.documentElement;
-    root.setAttribute('data-theme', resolved);
-    root.setAttribute('data-theme-mode', stored || 'dark');
-    if (resolved === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-  } catch (e) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.documentElement.classList.add('dark');
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
-})();
-`;
+  return context;
+}

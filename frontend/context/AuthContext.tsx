@@ -32,8 +32,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
+    let isMounted = true;
+    authApi
+      .get('/api/auth/me')
+      .then(({ data }) => {
+        if (isMounted) setUser(data.user);
+      })
+      .catch(() => {
+        if (isMounted) setUser(null);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const login = async (email: string, password: string) => {
     setError(null);

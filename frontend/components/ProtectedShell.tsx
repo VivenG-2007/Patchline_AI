@@ -118,9 +118,11 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
     });
   }, [user, pathname]);
 
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setMobileNavOpen(false);
-  }, [pathname]);
+  }
 
   if (loading) {
     return <LoadingScreen title="Signing you in…" subtitle="Verifying your session and loading your workspace." durationMs={1400} />;
