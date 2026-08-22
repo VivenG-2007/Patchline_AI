@@ -172,11 +172,43 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
   }
 
   const handleLogout = async () => {
+    try {
+      sessionStorage.removeItem('patchline_workspace_loaded');
+    } catch {
+      // ignore
+    }
     await logout();
     router.push('/');
   };
 
-  const [showLoading, setShowLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const hasLoaded = sessionStorage.getItem('patchline_workspace_loaded') === 'true';
+      const navEntries = performance.getEntriesByType?.('navigation');
+      const isReload =
+        navEntries &&
+        navEntries.length > 0 &&
+        (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
+
+      // Play loading animation ONLY after login once or on full browser page refresh
+      if (hasLoaded && !isReload) {
+        return false;
+      }
+    } catch {
+      // fallback
+    }
+    return true;
+  });
+
+  const handleLoadingComplete = () => {
+    setShowLoading(false);
+    try {
+      sessionStorage.setItem('patchline_workspace_loaded', 'true');
+    } catch {
+      // ignore
+    }
+  };
 
   if (loading || showLoading) {
     return (
@@ -184,7 +216,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         title="Initializing Workspace…"
         subtitle="Verifying session credentials & loading security telemetry."
         durationMs={2400}
-        onComplete={() => setShowLoading(false)}
+        onComplete={handleLoadingComplete}
       />
     );
   }
