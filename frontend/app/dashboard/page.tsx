@@ -1,22 +1,44 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Sparkles, RefreshCw, ScanSearch } from 'lucide-react';
 import ProtectedShell from '@/components/ProtectedShell';
 import EmptyState from '@/components/ui/EmptyState';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
 import ErrorBanner from '@/components/ErrorBanner';
+// Critical above-the-fold components — static import (fast first paint)
 import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
-import SeverityDistributionChart from '@/components/dashboard/SeverityDistributionChart';
-import ScanTrendsChart from '@/components/dashboard/ScanTrendsChart';
 import DashboardFilters, { FilterState } from '@/components/dashboard/DashboardFilters';
 import RecentScansTable, { RepoHealthItem } from '@/components/dashboard/RecentScansTable';
-import VulnHeatmap from '@/components/dashboard/VulnHeatmap';
-import AIFixEngine from '@/components/dashboard/AIFixEngine';
-import RepoAtRisk from '@/components/dashboard/RepoAtRisk';
-import SecurityRadar from '@/components/dashboard/SecurityRadar';
 import { mainApi } from '@/lib/api';
+
+// Heavy chart components — lazy-loaded after first paint (recharts tree-shaking)
+const SeverityDistributionChart = dynamic(
+  () => import('@/components/dashboard/SeverityDistributionChart'),
+  { ssr: false, loading: () => <div className="h-56 rounded-xl bg-bg-subtle/60 animate-pulse" /> }
+);
+const ScanTrendsChart = dynamic(
+  () => import('@/components/dashboard/ScanTrendsChart'),
+  { ssr: false, loading: () => <div className="h-56 rounded-xl bg-bg-subtle/60 animate-pulse" /> }
+);
+const VulnHeatmap = dynamic(
+  () => import('@/components/dashboard/VulnHeatmap'),
+  { ssr: false, loading: () => <div className="h-48 rounded-xl bg-bg-subtle/60 animate-pulse" /> }
+);
+const AIFixEngine = dynamic(
+  () => import('@/components/dashboard/AIFixEngine'),
+  { ssr: false, loading: () => <div className="h-40 rounded-xl bg-bg-subtle/60 animate-pulse" /> }
+);
+const RepoAtRisk = dynamic(
+  () => import('@/components/dashboard/RepoAtRisk'),
+  { ssr: false, loading: () => <div className="h-40 rounded-xl bg-bg-subtle/60 animate-pulse" /> }
+);
+const SecurityRadar = dynamic(
+  () => import('@/components/dashboard/SecurityRadar'),
+  { ssr: false, loading: () => <div className="h-48 rounded-xl bg-bg-subtle/60 animate-pulse" /> }
+);
 
 interface DashboardStats {
   kpis: {

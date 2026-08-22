@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ChevronDown, ChevronUp, Package, GitBranch, Search, Plus, Sparkles, ExternalLink } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import ProtectedShell from '@/components/ProtectedShell';
 import PageHeader from '@/components/ui/PageHeader';
 import Card from '@/components/ui/Card';
@@ -13,6 +13,10 @@ import EmptyState from '@/components/ui/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import VulnerabilityTimeline from '@/components/scanner/VulnerabilityTimeline';
 import { scannerApi } from '@/lib/api';
+
+// Lazily load recharts components — heavy JS not needed on initial paint
+const { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } =
+  (await import('recharts')) as typeof import('recharts');
 
 type ScanRecord = {
   scanId: string;
