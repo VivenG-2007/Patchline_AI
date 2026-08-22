@@ -335,9 +335,16 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         </div>
       )}
 
-      {/* Main content column (constant md:pl-[80px] so main UI NEVER shifts or resizes) */}
-      <div className="flex-1 min-w-0 flex flex-col md:pl-[80px]">
+      {/* Skip link for Accessibility / Lighthouse */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-1.5 focus:bg-primary focus:text-white focus:rounded-md focus:font-mono focus:text-xs"
+      >
+        Skip to main content
+      </a>
 
+      {/* Main content column (constant md:pl-[80px] so main UI NEVER shifts or resizes) */}
+      <main id="main-content" className="flex-1 min-w-0 flex flex-col md:pl-[80px]">
 
         {/* Top header */}
         <header
@@ -353,13 +360,13 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
               className="md:hidden transition-colors p-1"
               style={{ color: 'var(--muted)' }}
               onClick={() => setMobileNavOpen(true)}
-              aria-label="Open navigation"
+              aria-label="Open navigation menu"
             >
               <Menu size={19} strokeWidth={1.7} />
             </button>
 
             {/* Breadcrumb */}
-            <div className="hidden sm:flex items-center gap-1.5 text-[12px] font-mono" style={{ color: 'var(--muted-2)' }}>
+            <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-[12px] font-mono" style={{ color: 'var(--muted-2)' }}>
               <Link href="/dashboard" className="hover:text-foreground transition-colors" style={{ color: 'inherit' }}>
                 PatchLine
               </Link>
@@ -374,7 +381,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
                   </span>
                 </span>
               ))}
-            </div>
+            </nav>
 
             {/* Search */}
             <div className="w-full max-w-xs ml-auto sm:ml-4">
@@ -389,7 +396,8 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
               type="button"
               onClick={handleLogout}
               title="Log out to landing page"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all hover:bg-white/10"
+              aria-label="Log out of application"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all hover:bg-black/10 dark:hover:bg-white/10"
               style={{
                 background: 'var(--surface-2)',
                 border: '1px solid var(--border-strong)',
@@ -403,10 +411,8 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         </header>
 
         {/* Page content */}
-        <main className="flex-1 min-w-0 px-4 py-5 md:px-6 md:py-6 max-w-[1600px] w-full mx-auto animate-fade-rise-in">
-          {children}
-        </main>
-      </div>
+        <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-fade-in">{children}</div>
+      </main>
     </div>
   );
 }
