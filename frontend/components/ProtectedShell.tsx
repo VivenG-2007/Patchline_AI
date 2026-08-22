@@ -193,28 +193,24 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>
 
-      {/* Desktop Sidebar Layout Spacer — keeps main UI content perfectly offset at x=68px so content NEVER shifts */}
-      <div className="hidden md:block shrink-0 w-[68px] min-h-screen pointer-events-none" />
-
-      {/* Desktop Backdrop Dim & Blur Overlay on Sidebar Slide-Out */}
+      {/* Desktop Backdrop Dim & Blur Overlay (fades in behind floating sidebar on hover/expansion) */}
       <div
-        className={`hidden md:block fixed inset-0 z-30 transition-all duration-300 ease-in-out pointer-events-none ${
+        className={`hidden md:block fixed inset-0 z-40 transition-all duration-300 pointer-events-none ${
           sidebarExpanded
-            ? 'opacity-100 bg-black/25 dark:bg-black/50 backdrop-blur-[2px]'
+            ? 'opacity-100 bg-black/30 dark:bg-black/60 backdrop-blur-[3px]'
             : 'opacity-0 bg-transparent'
         }`}
       />
 
-      {/* Desktop Floating Sidebar with Smooth Sliding Animation & Glassmorphism */}
+      {/* Desktop Floating Card Sidebar (overlay panel at z-50) */}
       <aside
-        className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 z-40 overflow-hidden backdrop-blur-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`hidden md:flex flex-col fixed top-2 left-2 bottom-2 z-50 rounded-2xl overflow-hidden backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           sidebarExpanded
-            ? 'w-[230px] shadow-[0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-black/10 dark:ring-white/10'
-            : 'w-[68px] shadow-md'
+            ? 'w-[235px] shadow-[0_12px_48px_rgba(0,0,0,0.5)] ring-1 ring-border-strong'
+            : 'w-[64px] shadow-lg ring-1 ring-border-default'
         }`}
         style={{
           background: 'var(--sidebar-bg)',
-          borderRight: '1px solid var(--border-divider)',
         }}
         onMouseEnter={() => setSidebarExpanded(true)}
         onMouseLeave={() => setSidebarExpanded(false)}
@@ -265,7 +261,6 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         </div>
       </aside>
 
-
       {/* Mobile nav drawer */}
       {mobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
@@ -307,8 +302,9 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         </div>
       )}
 
-      {/* Main content column */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* Main content column (constant md:pl-[80px] so main UI NEVER shifts or resizes) */}
+      <div className="flex-1 min-w-0 flex flex-col md:pl-[80px]">
+
 
         {/* Top header */}
         <header
