@@ -90,6 +90,7 @@
 }
 
 /* ── Dark Mode: PatchLine Obsidian ── */
+/* ── Dark Mode: PatchLine Obsidian ── */
 :root,
 :root[data-theme='dark'],
 html.dark {
@@ -102,6 +103,10 @@ html.dark {
   --surface-2:       #121017;
   --surface-elevated:#17141C;
   --surface-hover:   #1B1821;
+
+  /* Header & Navigation */
+  --header-bg:       rgba(10, 9, 13, 0.85);
+  --header-border:   #1B1820;
 
   /* Borders */
   --border:          #24202B;
@@ -169,33 +174,42 @@ html.dark {
   --grid-line-color: rgba(168, 85, 247, 0.04);
 }
 
-/* ── Light Mode: Enterprise Companion ── */
+/* ── Light Mode: Clean Enterprise Companion ── */
 :root[data-theme='light'],
 html.light {
   color-scheme: light;
 
-  --background:      #F7F7F9;
+  /* Backgrounds */
+  --background:      #F8FAFC;
   --sidebar-bg:      #FFFFFF;
   --surface:         #FFFFFF;
-  --surface-2:       #F3F2F6;
+  --surface-2:       #F1F5F9;
   --surface-elevated:#FFFFFF;
-  --surface-hover:   #EEECF3;
+  --surface-hover:   #E2E8F0;
 
-  --border:          #E5E1EA;
-  --border-strong:   #CFC9D8;
-  --border-active:   #A78BFA;
-  --border-divider:  #EDE9F2;
+  /* Header & Navigation */
+  --header-bg:       rgba(255, 255, 255, 0.88);
+  --header-border:   #E2E8F0;
 
-  --foreground:      #18151C;
-  --muted:           #706A78;
-  --muted-2:         #9993A3;
+  /* Borders */
+  --border:          #E2E8F0;
+  --border-strong:   #CBD5E1;
+  --border-active:   #8B5CF6;
+  --border-divider:  #E2E8F0;
 
+  /* Text — High Contrast Slate Palette */
+  --foreground:      #0F172A; /* Slate-900 */
+  --muted:           #475569; /* Slate-600 */
+  --muted-2:         #64748B; /* Slate-500 — crisp card labels & subtitles */
+
+  /* Brand — Rich Vibrant Purple / Magenta */
   --primary:         #7C3AED;
   --primary-2:       #C026D3;
   --primary-3:       #DB2777;
   --primary-soft:    rgba(124, 58, 237, 0.08);
   --primary-glow:    rgba(124, 58, 237, 0.12);
 
+  /* Semantic Security */
   --critical:        #E11D48;
   --critical-soft:   rgba(225, 29, 72, 0.08);
   --critical-border: rgba(225, 29, 72, 0.20);
@@ -218,27 +232,31 @@ html.light {
   --scanning:        #7C3AED;
   --ai-processing:   #C026D3;
 
-  --editor-bg:       #1A1625;
-  --editor-line-num: #514A59;
-  --editor-text:     #D4D0D8;
-  --editor-keyword:  #C084FC;
-  --editor-func:     #A5B4FC;
-  --editor-string:   #86EFAC;
-  --editor-number:   #F0ABFC;
-  --editor-comment:  #6B6472;
-  --editor-error-bg: rgba(225, 29, 72, 0.12);
-  --editor-ai-bg:    rgba(124, 58, 237, 0.12);
+  /* Code editor */
+  --editor-bg:       #F8FAFC;
+  --editor-line-num: #94A3B8;
+  --editor-text:     #1E293B;
+  --editor-keyword:  #7C3AED;
+  --editor-func:     #2563EB;
+  --editor-string:   #16A34A;
+  --editor-number:   #DB2777;
+  --editor-comment:  #64748B;
+  --editor-error-bg: rgba(225, 29, 72, 0.08);
+  --editor-ai-bg:    rgba(124, 58, 237, 0.08);
   --editor-add-bg:   rgba(22, 163, 74, 0.08);
 
-  --heat-0: #EDE9F2;
-  --heat-1: #C4B5FD;
-  --heat-2: #8B5CF6;
-  --heat-3: #6D28D9;
+  /* Heatmap */
+  --heat-0: #F1F5F9;
+  --heat-1: #DDD6FE;
+  --heat-2: #A78BFA;
+  --heat-3: #7C3AED;
 
-  --card-glow:      0 1px 12px rgba(0, 0, 0, 0.06);
+  /* Misc */
+  --card-glow:        0 1px 12px rgba(0, 0, 0, 0.05);
   --card-glow-purple: 0 0 16px rgba(124, 58, 237, 0.08);
-  --grid-line-color: rgba(124, 58, 237, 0.04);
+  --grid-line-color:  rgba(124, 58, 237, 0.04);
 }
+
 
 /* ── CSS @property for fluid gradient transitions ── */
 @property --pos-x {

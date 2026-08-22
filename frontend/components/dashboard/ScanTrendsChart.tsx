@@ -37,23 +37,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: '#17141C',
-      border: '1px solid #302A38',
+      background: 'var(--surface-elevated)',
+      border: '1px solid var(--border-strong)',
       borderRadius: 10,
       padding: '8px 12px',
       fontFamily: 'var(--font-mono)',
       fontSize: 12,
+      color: 'var(--foreground)',
+      boxShadow: 'var(--card-glow)',
     }}>
-      <div style={{ color: '#9B93A5', marginBottom: 4 }}>{label}</div>
+      <div style={{ color: 'var(--muted)', marginBottom: 4 }}>{label}</div>
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-2">
           <span style={{ color: p.color }}>●</span>
-          <span style={{ color: '#F4F1F7' }}>{p.name}: <strong>{p.value}</strong></span>
+          <span>{p.name}: <strong>{p.value}</strong></span>
         </div>
       ))}
     </div>
   );
 };
+
 
 export default function ScanTrendsChart({
   data,

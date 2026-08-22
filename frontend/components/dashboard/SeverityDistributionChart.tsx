@@ -42,12 +42,19 @@ export default function SeverityDistributionChart({
     const pct = Math.round(((d.value as number) / total) * 100);
     return (
       <div style={{
-        background: '#17141C', border: '1px solid #302A38', borderRadius: 8,
-        padding: '6px 10px', fontFamily: 'var(--font-mono)', fontSize: 11,
+        background: 'var(--surface-elevated)',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 8,
+        padding: '6px 10px',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        color: 'var(--foreground)',
+        boxShadow: 'var(--card-glow)',
       }}>
         <span style={{ color: d.payload.color }}>● </span>
-        <span style={{ color: '#F4F1F7' }}>{d.name}: {d.value} ({pct}%)</span>
+        <span style={{ color: 'var(--foreground)' }}>{d.name}: {d.value} ({pct}%)</span>
       </div>
+
     );
   };
 

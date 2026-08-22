@@ -70,7 +70,7 @@ function SidebarContent({
     <>
       {/* Logo header */}
       <div className="h-14 flex items-center px-3 shrink-0"
-        style={{ borderBottom: '1px solid #1B1820' }}>
+        style={{ borderBottom: '1px solid var(--border-divider)' }}>
         <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onNavigate}>
           <PatchlineLogo />
           {expanded && (
@@ -199,12 +199,12 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
       {/* Desktop Sidebar — fixed floating overlay */}
       <aside
         className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 z-40 overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarExpanded ? 'shadow-2xl ring-1 ring-white/10' : 'shadow-md'
+          sidebarExpanded ? 'shadow-2xl ring-1 ring-black/10 dark:ring-white/10' : 'shadow-md'
         }`}
         style={{
           width: sidebarExpanded ? 220 : 68,
           background: 'var(--sidebar-bg)',
-          borderRight: '1px solid #1B1820',
+          borderRight: '1px solid var(--border-divider)',
         }}
         onMouseEnter={() => setSidebarExpanded(true)}
         onMouseLeave={() => setSidebarExpanded(false)}
@@ -215,7 +215,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
           expanded={sidebarExpanded}
         />
         {/* User avatar at bottom */}
-        <div className="px-2 pb-3 shrink-0" style={{ borderTop: '1px solid #1B1820', paddingTop: 8 }}>
+        <div className="px-2 pb-3 shrink-0" style={{ borderTop: '1px solid var(--border-divider)', paddingTop: 8 }}>
           <div
             className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-all"
             style={{
@@ -245,7 +245,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
                 onClick={handleLogout}
                 aria-label="Log out"
                 title="Log out to landing page"
-                className="shrink-0 transition-colors p-1 rounded hover:bg-white/10"
+                className="shrink-0 transition-colors p-1 rounded hover:bg-black/10 dark:hover:bg-white/10"
                 style={{ color: 'var(--muted)' }}
               >
                 <LogOut size={13} strokeWidth={1.7} />
@@ -264,7 +264,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
           />
           <aside
             className="relative w-[220px] max-w-[80vw] flex flex-col animate-slide-in-right z-50"
-            style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid #1B1820' }}
+            style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid var(--border-divider)' }}
           >
             <button
               className="absolute top-3 right-3 p-1.5 rounded-lg z-10"
@@ -279,7 +279,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
               expanded
               onNavigate={() => setMobileNavOpen(false)}
             />
-            <div className="px-3 py-3 shrink-0" style={{ borderTop: '1px solid #1B1820' }}>
+            <div className="px-3 py-3 shrink-0" style={{ borderTop: '1px solid var(--border-divider)' }}>
               <div className="text-[11px] font-mono truncate mb-2" style={{ color: 'var(--muted)' }}>
                 {user.email}
               </div>
@@ -299,15 +299,15 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
       {/* Main content column */}
       <div className="flex-1 min-w-0 flex flex-col">
 
-
         {/* Top header */}
         <header
-          className="h-14 shrink-0 flex items-center justify-between gap-3 px-4 md:px-6 sticky top-0 z-30 backdrop-blur-nav"
+          className="h-14 shrink-0 flex items-center justify-between gap-3 px-4 md:px-6 sticky top-0 z-30 backdrop-blur-nav transition-colors"
           style={{
-            background: 'rgba(10,9,13,0.85)',
-            borderBottom: '1px solid #1B1820',
+            background: 'var(--header-bg)',
+            borderBottom: '1px solid var(--header-border)',
           }}
         >
+
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <button
               className="md:hidden transition-colors p-1"
