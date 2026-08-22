@@ -193,6 +193,9 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>
 
+      {/* Desktop Sidebar Layout Spacer — keeps main UI content perfectly offset at x=68px so content is NEVER overlapped */}
+      <div className="hidden md:block shrink-0 w-[68px] min-h-screen pointer-events-none" />
+
       {/* Desktop Sidebar — fixed floating overlay */}
       <aside
         className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 z-40 overflow-hidden transition-all duration-300 ease-in-out ${
@@ -293,8 +296,9 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         </div>
       )}
 
-      {/* Main content column with fixed 68px left padding for desktop sidebar */}
-      <div className="flex-1 min-w-0 flex flex-col md:pl-[68px]">
+      {/* Main content column */}
+      <div className="flex-1 min-w-0 flex flex-col">
+
 
         {/* Top header */}
         <header
