@@ -1,6 +1,12 @@
 'use client';
 
-import { AuroraHero } from '@/components/ui/aurora-hero';
+import dynamic from 'next/dynamic';
+
+// aurora-hero uses motion/react + @react-three/fiber which crash during SSR
+const AuroraHero = dynamic(
+  () => import('@/components/ui/aurora-hero').then((m) => ({ default: m.AuroraHero })),
+  { ssr: false, loading: () => <div className="min-h-screen" style={{ background: '#070609' }} /> }
+);
 
 export default function AuroraHeroDemoPage() {
   return (

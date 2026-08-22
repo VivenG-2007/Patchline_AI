@@ -5,6 +5,7 @@ import React, { useState, useSyncExternalStore } from 'react';
 const emptySubscribe = () => () => {};
 const getSnapshot = () => true;
 const getServerSnapshot = () => false;
+
 import {
   AreaChart,
   Area,
@@ -13,10 +14,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Legend,
 } from 'recharts';
 import Card from '@/components/ui/Card';
-import { Calendar } from 'lucide-react';
 
 interface TrendItem {
   day: string;
@@ -31,143 +30,162 @@ interface ScanTrendsChartProps {
   subtitle?: string;
 }
 
+const TIME_RANGES = ['1D', '1W', '1M', '1Y'] as const;
+type TimeRange = typeof TIME_RANGES[number];
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: '#17141C',
+      border: '1px solid #302A38',
+      borderRadius: 10,
+      padding: '8px 12px',
+      fontFamily: 'var(--font-mono)',
+      fontSize: 12,
+    }}>
+      <div style={{ color: '#9B93A5', marginBottom: 4 }}>{label}</div>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} className="flex items-center gap-2">
+          <span style={{ color: p.color }}>●</span>
+          <span style={{ color: '#F4F1F7' }}>{p.name}: <strong>{p.value}</strong></span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function ScanTrendsChart({
   data,
-  title = 'Risk Index & Remediation Trajectory',
-  subtitle = 'Continuous 7-day chronological telemetry',
+  title = 'Security Activity',
+  subtitle = 'Open and resolved exposures overtime',
 }: ScanTrendsChartProps) {
-  const [viewMode, setViewMode] = useState<'risk' | 'volume'>('risk');
+  const [activeRange, setActiveRange] = useState<TimeRange>('1W');
   const mounted = useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
 
-  // Synthesize volumetric metrics if only risk score series is provided
   const chartData = data.map((item, idx) => ({
     day: item.day,
-    riskScore: item.score ?? 0,
-    scans: item.scans ?? Math.max(1, Math.round(((item.score ?? 10) / 10) + idx)),
-    remediated: item.remediated ?? Math.max(0, Math.round(((item.score ?? 10) / 15))),
+    resolved: item.remediated ?? Math.max(0, Math.round((item.score ?? 10) / 15)),
+    newFindings: item.scans ?? Math.max(1, Math.round(((item.score ?? 10) / 10) + idx * 0.5)),
   }));
 
-  const isEmpty = chartData.every((d) => d.riskScore === 0 && d.scans === 0);
+  const totalResolved = chartData.reduce((s, d) => s + d.resolved, 0);
+  const totalNew = chartData.reduce((s, d) => s + d.newFindings, 0);
+  const isEmpty = chartData.every((d) => d.resolved === 0 && d.newFindings === 0);
 
   return (
     <Card className="p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <h2 className="font-display text-sm font-semibold text-text-primary">{title}</h2>
-          <p className="text-xs text-text-muted">{subtitle}</p>
+          <h2 className="text-[13px] font-semibold mb-0.5" style={{ color: 'var(--foreground)' }}>
+            {title}
+          </h2>
+          <p className="text-[11px]" style={{ color: 'var(--muted-2)' }}>{subtitle}</p>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 mt-2">
+            <span className="flex items-center gap-1.5 text-[12px]" style={{ fontFamily: 'var(--font-mono)' }}>
+              <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: '#A855F7' }} />
+              <span style={{ color: '#A855F7' }}>Resolved</span>
+              <strong style={{ color: 'var(--foreground)', marginLeft: 2 }}>{totalResolved}</strong>
+            </span>
+            <span className="flex items-center gap-1.5 text-[12px]" style={{ fontFamily: 'var(--font-mono)' }}>
+              <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: '#EC4899' }} />
+              <span style={{ color: '#EC4899' }}>New</span>
+              <strong style={{ color: 'var(--foreground)', marginLeft: 2 }}>{totalNew}</strong>
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-bg-subtle border border-border-default text-xs">
-          <button
-            type="button"
-            onClick={() => setViewMode('risk')}
-            aria-label="View Risk Score metric"
-            className={`px-2.5 py-1 rounded-md transition-all font-mono text-[11px] ${
-              viewMode === 'risk'
-                ? 'bg-bg-card text-accent-cyan font-semibold shadow-sm'
-                : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            Risk Score
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('volume')}
-            aria-label="View Volume and PRs metric"
-            className={`px-2.5 py-1 rounded-md transition-all font-mono text-[11px] ${
-              viewMode === 'volume'
-                ? 'bg-bg-card text-accent-emerald font-semibold shadow-sm'
-                : 'text-text-muted hover:text-text-primary'
-            }`}
-          >
-            Volume &amp; PRs
-          </button>
+        {/* Time range pills */}
+        <div
+          className="flex items-center gap-0.5 p-0.5 rounded-lg"
+          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+        >
+          {TIME_RANGES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setActiveRange(r)}
+              className="px-2.5 py-1 rounded-md text-[11px] font-mono transition-all"
+              style={
+                activeRange === r
+                  ? { background: 'linear-gradient(135deg,#A855F7,#C026D3)', color: '#fff', fontWeight: 600 }
+                  : { color: 'var(--muted)', cursor: 'pointer' }
+              }
+            >
+              {r}
+            </button>
+          ))}
         </div>
       </div>
 
       {isEmpty ? (
-        <div className="h-64 flex flex-col items-center justify-center text-sm text-text-muted">
-          <Calendar size={28} className="text-text-muted/50 mb-2" />
-          <span>No historical activity recorded in the selected window.</span>
+        <div className="h-56 flex flex-col items-center justify-center text-sm" style={{ color: 'var(--muted-2)' }}>
+          No historical activity recorded.
         </div>
       ) : !mounted ? (
-        <div className="h-64 w-full rounded-lg bg-bg-subtle/50 skeleton-shimmer" />
+        <div className="h-56 rounded-lg skeleton-obsidian" />
       ) : (
-        <div className="h-64 w-full">
+        <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {viewMode === 'risk' ? (
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="riskCyanGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent-cyan)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="var(--accent-cyan)" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" vertical={false} />
-                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} width={35} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--bg-card)',
-                    borderColor: 'var(--border-hover)',
-                    borderRadius: 10,
-                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-                    fontSize: 12,
-                    color: 'var(--text-primary)',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="riskScore"
-                  name="Risk Index"
-                  stroke="var(--accent-cyan)"
-                  strokeWidth={2.5}
-                  fill="url(#riskCyanGrad)"
-                />
-              </AreaChart>
-            ) : (
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="scansGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent-purple)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="var(--accent-purple)" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="fixesGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent-emerald)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="var(--accent-emerald)" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" vertical={false} />
-                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} width={35} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--bg-card)',
-                    borderColor: 'var(--border-hover)',
-                    borderRadius: 10,
-                    fontSize: 12,
-                    color: 'var(--text-primary)',
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
-                <Area
-                  type="monotone"
-                  dataKey="scans"
-                  name="Scans Run"
-                  stroke="var(--accent-purple)"
-                  strokeWidth={2}
-                  fill="url(#scansGrad)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="remediated"
-                  name="Patches Verified"
-                  stroke="var(--accent-emerald)"
-                  strokeWidth={2}
-                  fill="url(#fixesGrad)"
-                />
-              </AreaChart>
-            )}
+            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+              <defs>
+                <linearGradient id="resolvedGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#A855F7" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="#A855F7" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="newGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#EC4899" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="#EC4899" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid
+                strokeDasharray="0"
+                stroke="rgba(168,85,247,0.06)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="day"
+                stroke="var(--muted-2)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                fontFamily="var(--font-mono)"
+              />
+              <YAxis
+                stroke="var(--muted-2)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                width={30}
+                fontFamily="var(--font-mono)"
+              />
+              <Tooltip content={<CustomTooltip />} />
+
+              <Area
+                type="monotone"
+                dataKey="resolved"
+                name="Resolved"
+                stroke="#A855F7"
+                strokeWidth={2}
+                fill="url(#resolvedGrad)"
+                dot={false}
+                activeDot={{ r: 4, fill: '#A855F7', stroke: '#17141C', strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="newFindings"
+                name="New"
+                stroke="#EC4899"
+                strokeWidth={2}
+                fill="url(#newGrad)"
+                dot={false}
+                activeDot={{ r: 4, fill: '#EC4899', stroke: '#17141C', strokeWidth: 2 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       )}

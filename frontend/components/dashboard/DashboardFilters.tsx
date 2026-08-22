@@ -18,6 +18,22 @@ interface DashboardFiltersProps {
   filteredCount: number;
 }
 
+const selectStyle: React.CSSProperties = {
+  appearance: 'none',
+  paddingLeft: 10,
+  paddingRight: 28,
+  paddingTop: 6,
+  paddingBottom: 6,
+  borderRadius: 9,
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border-strong)',
+  color: 'var(--foreground)',
+  fontSize: 11,
+  fontFamily: 'var(--font-mono)',
+  outline: 'none',
+  cursor: 'pointer',
+};
+
 export default function DashboardFilters({
   filters,
   onFilterChange,
@@ -32,42 +48,47 @@ export default function DashboardFilters({
     filters.sortBy !== 'recent';
 
   return (
-    <div className="p-4 rounded-xl border border-border-default bg-bg-card mb-6 space-y-3">
+    <div
+      className="p-4 rounded-xl space-y-3"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+    >
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-        {/* Real-time Search Input */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
+        {/* Search */}
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--muted-2)' }} />
           <input
             type="text"
             value={filters.searchQuery}
             onChange={(e) => onFilterChange({ ...filters, searchQuery: e.target.value })}
-            placeholder="Search repository, branch, scan ID, or vulnerability title…"
-            className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-bg-subtle border border-border-default focus:border-accent-cyan text-xs text-text-primary placeholder:text-text-muted outline-none transition-all"
+            placeholder="Search repository, branch, or vulnerability…"
+            className="pl-input w-full"
+            style={{ paddingLeft: 32, fontSize: 12 }}
           />
         </div>
 
-        {/* Status Dropdown */}
+        {/* Dropdowns */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Status */}
           <div className="relative">
             <select
               value={filters.status}
               onChange={(e) => onFilterChange({ ...filters, status: e.target.value })}
-              className="appearance-none pl-3 pr-8 py-2 rounded-lg bg-bg-subtle border border-border-default focus:border-accent-cyan text-xs text-text-primary font-mono outline-none cursor-pointer"
+              style={selectStyle}
             >
               <option value="ALL">All Statuses</option>
               <option value="Healthy">Healthy</option>
               <option value="Action Required">Action Required</option>
-              <option value="Critical">Critical Alert</option>
+              <option value="Warning">Warning</option>
             </select>
-            <Filter size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <Filter size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--muted-2)' }} />
           </div>
 
-          {/* Severity Dropdown */}
+          {/* Severity */}
           <div className="relative">
             <select
               value={filters.severity}
               onChange={(e) => onFilterChange({ ...filters, severity: e.target.value })}
-              className="appearance-none pl-3 pr-8 py-2 rounded-lg bg-bg-subtle border border-border-default focus:border-accent-cyan text-xs text-text-primary font-mono outline-none cursor-pointer"
+              style={selectStyle}
             >
               <option value="ALL">All Severities</option>
               <option value="CRITICAL">Critical</option>
@@ -75,48 +96,61 @@ export default function DashboardFilters({
               <option value="MEDIUM">Medium</option>
               <option value="LOW">Low</option>
             </select>
-            <Filter size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <Filter size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--muted-2)' }} />
           </div>
 
-          {/* Sort Dropdown */}
+          {/* Sort */}
           <div className="relative">
             <select
               value={filters.sortBy}
               onChange={(e) =>
-                onFilterChange({
-                  ...filters,
-                  sortBy: e.target.value as FilterState['sortBy'],
-                })
+                onFilterChange({ ...filters, sortBy: e.target.value as FilterState['sortBy'] })
               }
-              className="appearance-none pl-3 pr-8 py-2 rounded-lg bg-bg-subtle border border-border-default focus:border-accent-cyan text-xs text-text-primary font-mono outline-none cursor-pointer"
+              style={selectStyle}
             >
               <option value="recent">Most Recent</option>
-              <option value="risk_desc">Risk: High to Low</option>
+              <option value="risk_desc">Risk: High → Low</option>
               <option value="findings_desc">Findings Count</option>
             </select>
-            <ArrowUpDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <ArrowUpDown size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--muted-2)' }} />
           </div>
 
-          {/* One-Click Reset Button */}
+          {/* Reset */}
           {isFiltered && (
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent-rose-soft hover:bg-accent-rose-soft/80 text-accent-rose text-xs font-mono transition-colors"
-              title="Reset all search filters"
+              title="Reset all filters"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 10px',
+                borderRadius: 9,
+                background: 'rgba(244,63,94,0.08)',
+                border: '1px solid rgba(244,63,94,0.22)',
+                color: '#F43F5E',
+                fontSize: 11,
+                fontFamily: 'var(--font-mono)',
+                cursor: 'pointer',
+              }}
             >
-              <RotateCcw size={12} />
+              <RotateCcw size={11} />
               Reset
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[11px] font-mono text-text-muted pt-1 border-t border-border-default/60">
+      {/* Count */}
+      <div
+        className="flex items-center justify-between text-[11px] font-mono pt-2"
+        style={{ borderTop: '1px solid var(--border)', color: 'var(--muted-2)' }}
+      >
         <span>
-          Showing <strong className="text-text-primary">{filteredCount}</strong> of {totalCount} repositories
+          Showing <strong style={{ color: 'var(--foreground)' }}>{filteredCount}</strong> of {totalCount} repositories
         </span>
-        {isFiltered && <span className="text-accent-cyan">Active filters applied</span>}
+        {isFiltered && <span style={{ color: 'var(--primary)' }}>Active filters applied</span>}
       </div>
     </div>
   );

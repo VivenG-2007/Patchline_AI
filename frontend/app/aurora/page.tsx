@@ -1,10 +1,15 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { AuroraColorProvider } from '@/context/AuroraColorContext';
 import { AuroraNavbar } from '@/components/aurora/AuroraNavbar';
-import { AuroraHero } from '@/components/ui/aurora-hero';
 import { AuroraCursorGlow } from '@/components/aurora/AuroraCursorGlow';
+
+const AuroraHero = dynamic(
+  () => import('@/components/ui/aurora-hero').then((m) => ({ default: m.AuroraHero })),
+  { ssr: false, loading: () => <div className="min-h-screen bg-[#020617]" /> }
+);
 import { AuroraStats } from '@/components/aurora/AuroraStats';
 import { AuroraFeatureCards } from '@/components/aurora/AuroraFeatureCards';
 import { AuroraDivider } from '@/components/aurora/AuroraDivider';

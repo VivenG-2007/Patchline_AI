@@ -1,10 +1,17 @@
-import { HTMLAttributes } from 'react';
+import React from 'react';
 
-export default function Card({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  glow?: boolean;
+}
+
+export default function Card({ children, className = '', glow = false, style, ...props }: CardProps) {
   return (
     <div
-      className={`card-surface rounded-xl ${className}`}
+      className={`pl-card ${glow ? 'pl-card-glow' : ''} ${className}`}
+      style={style}
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }

@@ -2,9 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { GitBranch, ExternalLink, ChevronRight, ChevronLeft, ShieldCheck, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import { GitBranch, ChevronRight, ChevronLeft, CheckCircle2, Sparkles } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 
 export interface RepoHealthItem {
   repo: string;
@@ -22,12 +21,32 @@ interface RecentScansTableProps {
   pageSize?: number;
 }
 
-const RISK_BADGE: Record<string, 'critical' | 'warning' | 'info' | 'success'> = {
-  Critical: 'critical',
-  High: 'warning',
-  Medium: 'info',
-  Low: 'success',
+const SEVERITY_STYLE: Record<string, { bg: string; border: string; color: string }> = {
+  Critical: { bg: 'rgba(244,63,94,0.10)',  border: 'rgba(244,63,94,0.25)',  color: '#F43F5E' },
+  High:     { bg: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.25)', color: '#F97316' },
+  Medium:   { bg: 'rgba(234,179,8,0.10)',  border: 'rgba(234,179,8,0.25)',  color: '#EAB308' },
+  Low:      { bg: 'rgba(34,197,94,0.08)',  border: 'rgba(34,197,94,0.25)',  color: '#22C55E' },
 };
+
+const STATUS_DOT: Record<string, string> = {
+  Healthy: '#22C55E',
+  'Action Required': '#F43F5E',
+  Warning: '#EAB308',
+  Scanning: '#A855F7',
+  Clean: '#22C55E',
+};
+
+function SeverityBadge({ level }: { level: string }) {
+  const s = SEVERITY_STYLE[level] ?? { bg: 'rgba(107,99,115,0.10)', border: 'rgba(107,99,115,0.25)', color: '#6B6373' };
+  return (
+    <span
+      className="pl-badge"
+      style={{ background: s.bg, borderColor: s.border, color: s.color }}
+    >
+      {level.toUpperCase()}
+    </span>
+  );
+}
 
 function formatTime(iso: string) {
   if (!iso) return 'Recent';
@@ -35,14 +54,11 @@ function formatTime(iso: string) {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return iso;
-  }
+  } catch { return iso; }
 }
 
 export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const pagedItems = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -51,106 +67,157 @@ export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTab
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
         <div>
-          <h2 className="font-display text-sm font-semibold text-text-primary">Repository Health &amp; Pipeline Status</h2>
-          <p className="text-xs text-text-muted">Monitored repositories and continuous compliance status</p>
+          <h2 className="text-[13px] font-semibold" style={{ color: 'var(--foreground)' }}>
+            Recent Vulnerabilities
+          </h2>
+          <p className="text-[11px]" style={{ color: 'var(--muted-2)' }}>
+            Monitored repositories &amp; pipeline status
+          </p>
         </div>
-        <span className="font-mono text-xs text-text-muted">
-          Page {currentPage} of {totalPages}
+        <span className="font-mono text-[11px]" style={{ color: 'var(--muted-2)' }}>
+          {currentPage} / {totalPages}
         </span>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+        <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-border-default bg-bg-subtle/50 text-[11px] font-mono text-text-muted uppercase tracking-wider">
-              <th className="px-5 py-3 font-semibold">Repository</th>
-              <th className="px-4 py-3 font-semibold hidden sm:table-cell">Branch</th>
-              <th className="px-4 py-3 font-semibold">Risk Tier</th>
-              <th className="px-4 py-3 font-semibold">Findings</th>
-              <th className="px-4 py-3 font-semibold hidden md:table-cell">Last Scanned</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-5 py-3 font-semibold text-right">Actions</th>
+            <tr
+              className="text-[10px] font-mono uppercase tracking-wider"
+              style={{
+                background: 'var(--surface-2)',
+                color: 'var(--muted-2)',
+                borderBottom: '1px solid var(--border)',
+              }}
+            >
+              <th className="px-5 py-2.5 font-semibold">Repository</th>
+              <th className="px-4 py-2.5 font-semibold hidden sm:table-cell">Branch</th>
+              <th className="px-4 py-2.5 font-semibold">Severity</th>
+              <th className="px-4 py-2.5 font-semibold">Findings</th>
+              <th className="px-4 py-2.5 font-semibold hidden md:table-cell">Last Scanned</th>
+              <th className="px-4 py-2.5 font-semibold">Status</th>
+              <th className="px-5 py-2.5 font-semibold text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border-default">
+          <tbody>
             {pagedItems.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-text-muted">
+                <td colSpan={7} className="px-5 py-8 text-center text-[12px]" style={{ color: 'var(--muted-2)' }}>
                   No repositories match your active filter criteria.
                 </td>
               </tr>
             ) : (
               pagedItems.map((r) => {
-                const [owner, name] = r.repo.includes('/') ? r.repo.split('/') : ['', r.repo];
+                const [owner, name] = r.repo.includes('/')
+                  ? r.repo.split('/')
+                  : ['', r.repo];
+                const isScanning = r.status === 'Scanning';
+                const dotColor = STATUS_DOT[r.status] ?? '#6B6373';
+
                 return (
                   <tr
                     key={r.repo}
-                    className="hover:bg-bg-subtle/70 transition-colors group"
+                    className="transition-colors group"
+                    style={{ borderBottom: '1px solid var(--border)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                   >
-                    <td className="px-5 py-3.5">
+                    {/* Repo */}
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-bg-subtle border border-border-default flex items-center justify-center text-text-secondary shrink-0">
-                          <GitBranch size={13} />
+                        <div
+                          className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+                        >
+                          <GitBranch size={11} style={{ color: 'var(--muted)' }} />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-mono font-medium text-text-primary truncate">
-                            {owner && <span className="text-text-muted">{owner}/</span>}
+                          <div className="font-mono text-[12px] truncate" style={{ color: 'var(--foreground)' }}>
+                            {owner && <span style={{ color: 'var(--muted)' }}>{owner}/</span>}
                             {name}
                           </div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-4 py-3.5 font-mono text-text-secondary hidden sm:table-cell">
-                      <span className="px-2 py-0.5 rounded bg-bg-subtle border border-border-default text-[11px]">
+                    {/* Branch */}
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <span
+                        className="font-mono text-[11px] px-2 py-0.5 rounded"
+                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--muted)' }}
+                      >
                         {r.branch}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3.5">
-                      <Badge tone={RISK_BADGE[r.riskLevel] || 'neutral'} dot>
-                        {r.riskLevel}
-                      </Badge>
+                    {/* Severity */}
+                    <td className="px-4 py-3">
+                      <SeverityBadge level={r.riskLevel} />
                     </td>
 
-                    <td className="px-4 py-3.5 font-mono">
+                    {/* Findings */}
+                    <td className="px-4 py-3 font-mono text-[12px]">
                       {r.findings > 0 ? (
-                        <span className="text-accent-rose font-semibold">{r.findings} issues</span>
+                        <span style={{ color: '#F43F5E', fontWeight: 600 }}>{r.findings} issues</span>
                       ) : (
-                        <span className="text-accent-emerald flex items-center gap-1">
-                          <CheckCircle2 size={12} /> Clean
+                        <span className="flex items-center gap-1" style={{ color: '#22C55E' }}>
+                          <CheckCircle2 size={11} /> Clean
                         </span>
                       )}
                     </td>
 
-                    <td className="px-4 py-3.5 text-text-muted font-mono hidden md:table-cell">
+                    {/* Last scanned */}
+                    <td className="px-4 py-3 font-mono text-[11px] hidden md:table-cell" style={{ color: 'var(--muted-2)' }}>
                       {formatTime(r.lastScan)}
                     </td>
 
-                    <td className="px-4 py-3.5">
+                    {/* Status */}
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`w-2 h-2 rounded-full ${
-                            r.status === 'Healthy'
-                              ? 'bg-accent-emerald'
-                              : r.status === 'Action Required'
-                                ? 'bg-accent-rose pulse-dot'
-                                : 'bg-accent-amber'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${isScanning ? 'pulse-dot' : ''}`}
+                          style={{ background: dotColor }}
                         />
-                        <span className="text-text-secondary font-medium">{r.status}</span>
+                        <span className="text-[12px]" style={{ color: 'var(--muted)' }}>
+                          {r.status}
+                        </span>
                       </div>
                     </td>
 
-                    <td className="px-5 py-3.5 text-right">
-                      <Link
-                        href={`/scanner?repo=${encodeURIComponent(r.repo)}&branch=${encodeURIComponent(r.branch)}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-bg-subtle hover:bg-accent-cyan-soft hover:text-accent-cyan text-text-secondary border border-border-default hover:border-accent-cyan/40 font-mono text-[11px] transition-all"
-                      >
-                        Inspect <ChevronRight size={11} />
-                      </Link>
+                    {/* Actions */}
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {r.findings > 0 && (
+                          <button
+                            className="flex items-center gap-1 px-2 py-1 rounded-md font-mono text-[11px] transition-all"
+                            style={{
+                              background: 'rgba(192,38,211,0.10)',
+                              border: '1px solid rgba(192,38,211,0.25)',
+                              color: '#C026D3',
+                            }}
+                            title="AI Fix"
+                          >
+                            <Sparkles size={10} /> FIX
+                          </button>
+                        )}
+                        <Link
+                          href={`/scanner?repo=${encodeURIComponent(r.repo)}&branch=${encodeURIComponent(r.branch)}`}
+                          className="flex items-center gap-1 px-2 py-1 rounded-md font-mono text-[11px] transition-all"
+                          style={{
+                            background: 'var(--surface-2)',
+                            border: '1px solid var(--border-strong)',
+                            color: 'var(--muted)',
+                          }}
+                        >
+                          Inspect <ChevronRight size={10} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -160,29 +227,32 @@ export default function RecentScansTable({ items, pageSize = 5 }: RecentScansTab
         </table>
       </div>
 
-      {/* Pagination Bar */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-5 py-3 border-t border-border-default flex items-center justify-between text-xs">
+        <div
+          className="px-5 py-3 flex items-center justify-between text-[12px]"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
           <button
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-default bg-bg-card hover:bg-bg-subtle disabled:opacity-40 disabled:pointer-events-none transition-colors font-mono"
+            className="pl-btn-secondary disabled:opacity-40 disabled:pointer-events-none"
+            style={{ height: 30, fontSize: 11, padding: '0 10px' }}
           >
-            <ChevronLeft size={13} /> Previous
+            <ChevronLeft size={12} /> Prev
           </button>
-
-          <span className="font-mono text-text-muted">
+          <span className="font-mono" style={{ color: 'var(--muted-2)' }}>
             {currentPage} / {totalPages}
           </span>
-
           <button
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-default bg-bg-card hover:bg-bg-subtle disabled:opacity-40 disabled:pointer-events-none transition-colors font-mono"
+            className="pl-btn-secondary disabled:opacity-40 disabled:pointer-events-none"
+            style={{ height: 30, fontSize: 11, padding: '0 10px' }}
           >
-            Next <ChevronRight size={13} />
+            Next <ChevronRight size={12} />
           </button>
         </div>
       )}

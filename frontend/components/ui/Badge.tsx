@@ -1,35 +1,36 @@
-type Tone = 'critical' | 'warning' | 'success' | 'info' | 'neutral';
+import React from 'react';
+
+type Tone = 'critical' | 'high' | 'warning' | 'medium' | 'low' | 'success' | 'info' | 'neutral' | 'scanning' | 'ai';
 
 interface BadgeProps {
   tone?: Tone;
-  children: React.ReactNode;
   dot?: boolean;
-  pulse?: boolean;
+  children: React.ReactNode;
   className?: string;
 }
 
-const tones: Record<Tone, string> = {
-  critical: 'bg-critical-soft text-critical border-critical/25',
-  warning: 'bg-warning-soft text-warning border-warning/25',
-  success: 'bg-success-soft text-success border-success/25',
-  info: 'bg-info-soft text-info border-info/25',
-  neutral: 'bg-surface-raised text-muted border-border-strong',
+const TONE_CLASS: Record<Tone, string> = {
+  critical: 'pl-badge-critical',
+  high:     'pl-badge-high',
+  warning:  'pl-badge-high',
+  medium:   'pl-badge-medium',
+  low:      'pl-badge-low',
+  success:  'pl-badge-success',
+  info:     'pl-badge-scanning',
+  neutral:  'pl-badge-neutral',
+  scanning: 'pl-badge-scanning',
+  ai:       'pl-badge-ai',
 };
 
-const dotTones: Record<Tone, string> = {
-  critical: 'bg-critical',
-  warning: 'bg-warning',
-  success: 'bg-success',
-  info: 'bg-info',
-  neutral: 'bg-faint',
-};
-
-export default function Badge({ tone = 'neutral', children, dot = false, pulse = false, className = '' }: BadgeProps) {
+export default function Badge({ tone = 'neutral', dot = false, children, className = '' }: BadgeProps) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded border ${tones[tone]} ${className}`}
-    >
-      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotTones[tone]} ${pulse ? 'pulse-dot' : ''}`} />}
+    <span className={`pl-badge ${TONE_CLASS[tone]} ${className}`}>
+      {dot && (
+        <span
+          className="w-1.5 h-1.5 rounded-full shrink-0 inline-block"
+          style={{ background: 'currentColor' }}
+        />
+      )}
       {children}
     </span>
   );

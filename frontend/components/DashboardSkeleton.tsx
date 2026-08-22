@@ -1,62 +1,109 @@
 'use client';
 
+function Skel({ w = 'w-full', h = 'h-4', className = '' }) {
+  return (
+    <div
+      className={`skeleton-obsidian ${w} ${h} ${className}`}
+      style={{ borderRadius: 8 }}
+    />
+  );
+}
+
 export default function DashboardSkeleton() {
   return (
-    <div className="space-y-8 animate-pulse">
-      {/* Top Welcome Heading Skeleton */}
-      <div className="space-y-2">
-        <div className="h-8 w-48 rounded-lg bg-bg-card skeleton-shimmer" />
-        <div className="h-4 w-96 rounded-md bg-bg-card skeleton-shimmer" />
-      </div>
-
-      {/* 4 Executive KPI Metric Skeletons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="p-5 rounded-xl border border-border-default bg-bg-card space-y-3">
+    <div className="space-y-4">
+      {/* KPI row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[1,2,3,4].map((i) => (
+          <div
+            key={i}
+            className="p-5 rounded-xl space-y-3"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
             <div className="flex items-center justify-between">
-              <div className="h-3.5 w-24 rounded bg-bg-card-raised skeleton-shimmer" />
-              <div className="w-8 h-8 rounded-lg bg-bg-card-raised skeleton-shimmer" />
+              <Skel w="w-24" h="h-3" />
+              <div className="w-8 h-8 rounded-xl skeleton-obsidian" />
             </div>
-            <div className="h-7 w-20 rounded bg-bg-card-raised skeleton-shimmer" />
-            <div className="h-3 w-32 rounded bg-bg-card-raised skeleton-shimmer" />
+            <Skel w="w-20" h="h-7" />
+            <Skel w="w-32" h="h-2.5" />
           </div>
         ))}
       </div>
 
-      {/* Charts Grid Skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 p-5 rounded-xl border border-border-default bg-bg-card space-y-4">
+      {/* Hero chart + donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div
+          className="lg:col-span-2 p-5 rounded-xl space-y-4"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
           <div className="flex items-center justify-between">
-            <div className="h-4 w-40 rounded bg-bg-card-raised skeleton-shimmer" />
-            <div className="h-3 w-20 rounded bg-bg-card-raised skeleton-shimmer" />
+            <Skel w="w-40" h="h-4" />
+            <Skel w="w-24" h="h-7" />
           </div>
-          <div className="h-60 w-full rounded-lg bg-bg-card-raised skeleton-shimmer" />
+          <Skel h="h-56" />
         </div>
-
-        <div className="p-5 rounded-xl border border-border-default bg-bg-card space-y-4">
-          <div className="h-4 w-36 rounded bg-bg-card-raised skeleton-shimmer" />
-          <div className="h-60 w-full rounded-lg bg-bg-card-raised skeleton-shimmer flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full border-4 border-border-default" />
+        <div
+          className="p-5 rounded-xl space-y-4"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
+          <Skel w="w-36" h="h-4" />
+          <div className="flex items-center justify-center h-44">
+            <div
+              className="w-28 h-28 rounded-full skeleton-obsidian"
+              style={{ border: '6px solid var(--surface-elevated)' }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[1,2,3,4].map((i) => <Skel key={i} h="h-8" />)}
           </div>
         </div>
       </div>
 
-      {/* Table & Filter Skeletons */}
-      <div className="rounded-xl border border-border-default bg-bg-card overflow-hidden">
-        <div className="p-4 border-b border-border-default flex flex-wrap gap-3">
-          <div className="h-9 flex-1 min-w-[200px] rounded-lg bg-bg-card-raised skeleton-shimmer" />
-          <div className="h-9 w-32 rounded-lg bg-bg-card-raised skeleton-shimmer" />
-          <div className="h-9 w-32 rounded-lg bg-bg-card-raised skeleton-shimmer" />
-        </div>
-        <div className="divide-y divide-border-default p-2">
-          {[1, 2, 3, 4, 5].map((row) => (
-            <div key={row} className="p-4 flex items-center justify-between gap-4">
-              <div className="space-y-1.5 flex-1">
-                <div className="h-4 w-48 rounded bg-bg-card-raised skeleton-shimmer" />
-                <div className="h-3 w-32 rounded bg-bg-card-raised skeleton-shimmer" />
+      {/* Heatmap + AI engine */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {[1,2].map((i) => (
+          <div key={i} className="p-5 rounded-xl space-y-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <Skel w="w-40" h="h-4" />
+            <Skel h="h-40" />
+          </div>
+        ))}
+      </div>
+
+      {/* Repos at risk + Radar */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {[1,2].map((i) => (
+          <div key={i} className="p-5 rounded-xl space-y-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <Skel w="w-36" h="h-4" />
+            {[1,2,3,4].map((j) => (
+              <div key={j} className="space-y-1.5">
+                <Skel w="w-32" h="h-3" />
+                <Skel h="h-2.5" />
               </div>
-              <div className="h-6 w-20 rounded-full bg-bg-card-raised skeleton-shimmer" />
-              <div className="h-6 w-24 rounded bg-bg-card-raised skeleton-shimmer" />
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div className="p-4 flex flex-wrap gap-3" style={{ borderBottom: '1px solid var(--border)' }}>
+          <div className="flex-1 min-w-[200px]"><Skel h="h-9" /></div>
+          <Skel w="w-24" h="h-9" />
+          <Skel w="w-24" h="h-9" />
+        </div>
+        <div>
+          {[1,2,3,4,5].map((row) => (
+            <div
+              key={row}
+              className="px-5 py-3 flex items-center justify-between gap-4"
+              style={{ borderBottom: '1px solid var(--border)' }}
+            >
+              <div className="space-y-1.5 flex-1">
+                <Skel w="w-48" h="h-3.5" />
+                <Skel w="w-28" h="h-2.5" />
+              </div>
+              <Skel w="w-16" h="h-5" />
+              <Skel w="w-20" h="h-5" />
             </div>
           ))}
         </div>

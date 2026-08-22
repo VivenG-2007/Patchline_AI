@@ -44,8 +44,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#070a12' },
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#070609' },
+    { media: '(prefers-color-scheme: light)', color: '#F7F7F9' },
   ],
 };
 
@@ -53,7 +53,7 @@ const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('patchline
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         {/* Anti-flicker pre-hydration script */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

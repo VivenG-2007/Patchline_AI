@@ -28,89 +28,107 @@ export default function SeverityDistributionChart({
   const total = critical + high + medium + low;
 
   const data = [
-    { name: 'Critical', value: critical, color: 'var(--accent-rose)', tone: 'text-accent-rose bg-accent-rose-soft' },
-    { name: 'High', value: high, color: 'var(--accent-amber)', tone: 'text-accent-amber bg-accent-amber-soft' },
-    { name: 'Medium', value: medium, color: 'var(--accent-cyan)', tone: 'text-accent-cyan bg-accent-cyan-soft' },
-    { name: 'Low', value: low, color: 'var(--accent-emerald)', tone: 'text-accent-emerald bg-accent-emerald-soft' },
+    { name: 'Critical', value: critical, color: '#F43F5E' },
+    { name: 'High',     value: high,     color: '#F97316' },
+    { name: 'Medium',   value: medium,   color: '#EAB308' },
+    { name: 'Low',      value: low,      color: '#22C55E' },
   ].filter((d) => d.value > 0);
 
+  const riskColor = globalRiskScore > 60 ? '#F43F5E' : globalRiskScore > 30 ? '#EAB308' : '#22C55E';
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0];
+    const pct = Math.round(((d.value as number) / total) * 100);
+    return (
+      <div style={{
+        background: '#17141C', border: '1px solid #302A38', borderRadius: 8,
+        padding: '6px 10px', fontFamily: 'var(--font-mono)', fontSize: 11,
+      }}>
+        <span style={{ color: d.payload.color }}>● </span>
+        <span style={{ color: '#F4F1F7' }}>{d.name}: {d.value} ({pct}%)</span>
+      </div>
+    );
+  };
+
   return (
-    <Card className="p-5 flex flex-col justify-between">
+    <Card className="p-5 flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="font-display text-sm font-semibold text-text-primary">Severity Spectrum</h2>
-          <p className="text-xs text-text-muted">Breakdown by CVSS risk tier</p>
+          <h2 className="text-[13px] font-semibold" style={{ color: 'var(--foreground)' }}>
+            Severity Spectrum
+          </h2>
+          <p className="text-[11px]" style={{ color: 'var(--muted-2)' }}>Breakdown by CVSS risk tier</p>
         </div>
-        <span className="font-mono text-xs text-text-muted px-2 py-0.5 rounded bg-bg-subtle border border-border-default">
+        <span
+          className="font-mono text-[11px] px-2 py-0.5 rounded-md"
+          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--muted)' }}
+        >
           {total} issues
         </span>
       </div>
 
       {total === 0 ? (
-        <div className="h-56 flex flex-col items-center justify-center text-center p-4">
-          <div className="w-12 h-12 rounded-full bg-accent-emerald-soft text-accent-emerald flex items-center justify-center mb-2">
-            <ShieldCheck size={24} />
+        <div className="h-52 flex flex-col items-center justify-center text-center">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
+            style={{ background: 'rgba(34,197,94,0.10)', color: '#22C55E' }}>
+            <ShieldCheck size={22} />
           </div>
-          <div className="text-sm font-medium text-text-primary">Zero Flaws Detected</div>
-          <div className="text-xs text-text-muted mt-1">All connected repositories passed compliance checks.</div>
+          <div className="text-[13px] font-medium" style={{ color: 'var(--foreground)' }}>Zero Flaws Detected</div>
+          <div className="text-[11px] mt-1" style={{ color: 'var(--muted-2)' }}>All repositories passed checks.</div>
         </div>
       ) : !mounted ? (
-        <div className="h-48 my-2 rounded-lg bg-bg-subtle/50 skeleton-shimmer" />
+        <div className="h-44 my-2 rounded-lg skeleton-obsidian" />
       ) : (
         <>
-          <div className="relative h-48 my-2">
+          <div className="relative h-44 my-2">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const d = payload[0];
-                      const pct = Math.round(((d.value as number) / total) * 100);
-                      return (
-                        <div className="p-2.5 rounded-lg bg-bg-card border border-border-hover shadow-xl font-mono text-xs">
-                          <div className="font-semibold text-text-primary flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.payload.color }} />
-                            {d.name}: {d.value} ({pct}%)
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={75}
-                  paddingAngle={4}
+                  innerRadius={52}
+                  outerRadius={70}
+                  paddingAngle={3}
                   dataKey="value"
                   strokeWidth={0}
+                  animationBegin={0}
+                  animationDuration={900}
                 >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {data.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-
+            {/* Center label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Risk Index</span>
-              <span className="font-display text-2xl font-bold text-text-primary tabular-nums">
+              <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
+                Risk Index
+              </span>
+              <span className="font-bold text-[26px] leading-none count-up" style={{ color: riskColor }}>
                 {globalRiskScore}
               </span>
+              <span className="text-[9px] font-mono" style={{ color: 'var(--muted-2)' }}>/100</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border-default">
+          <div className="grid grid-cols-2 gap-1.5 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
             {data.map((item) => (
-              <div key={item.name} className="flex items-center justify-between p-2 rounded-lg bg-bg-subtle/50 text-xs">
-                <span className="flex items-center gap-1.5 font-medium text-text-secondary">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+              <div
+                key={item.name}
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg"
+                style={{ background: 'var(--surface-2)' }}
+              >
+                <span className="flex items-center gap-1.5 text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+                  <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
                   {item.name}
                 </span>
-                <span className="font-mono font-semibold text-text-primary">{item.value}</span>
+                <span className="font-mono font-semibold text-[12px]" style={{ color: 'var(--foreground)' }}>
+                  {item.value}
+                </span>
               </div>
             ))}
           </div>
