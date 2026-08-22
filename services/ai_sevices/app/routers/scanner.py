@@ -1385,7 +1385,7 @@ async def generate_and_verify_fix(payload: FixRequest, user: CurrentUser = Depen
         method=method,
         finding=finding,
         owner_id=user.id,
-        repo=doc.get("repo"),
+        repo=scan_doc.get("repo"),
     )
 
     return FixResponse(
