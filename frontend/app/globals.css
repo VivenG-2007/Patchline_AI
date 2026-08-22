@@ -424,6 +424,31 @@ html.light {
     border-color: var(--border-hover);
   }
 
+  .hover-lift {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .animate-shake {
+    animation: shake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  @keyframes pulse-success {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    50% { transform: scale(1.03); box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+  .animate-pulse-success {
+    animation: pulse-success 0.6s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
   @keyframes scanline-sweep {
     0% { transform: translateY(-100%); }
     100% { transform: translateY(2200%); }
@@ -487,6 +512,14 @@ html.light {
     animation: fade-rise-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-scale-in {
+    animation: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   @keyframes slide-in-right {
     from { opacity: 0; transform: translateX(20px); }
     to { opacity: 1; transform: translateX(0); }
@@ -500,6 +533,23 @@ html.light {
     -webkit-backdrop-filter: blur(14px);
   }
 
+  .nav-link-hover {
+    position: relative;
+  }
+  .nav-link-hover::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent-cyan);
+    transition: width 0.2s ease-in-out;
+  }
+  .nav-link-hover:hover::after {
+    width: 100%;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .scanline,
     .pulse-dot,
@@ -507,8 +557,13 @@ html.light {
     .shimmer-bg,
     .skeleton-shimmer,
     .animate-fade-rise-in,
-    .animate-slide-in-right {
+    .animate-scale-in,
+    .animate-slide-in-right,
+    .animate-shake,
+    .animate-pulse-success,
+    .hover-lift {
       animation: none;
+      transform: none;
     }
     html {
       scroll-behavior: auto;
