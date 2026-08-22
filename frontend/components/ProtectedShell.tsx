@@ -73,19 +73,24 @@ function SidebarContent({
         style={{ borderBottom: '1px solid var(--border-divider)' }}>
         <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onNavigate}>
           <PatchlineLogo />
-          {expanded && (
-            <div className="overflow-hidden">
-              <div className="font-sans font-bold text-[15px] tracking-tight"
-                style={{ color: '#F4F1F7' }}>
-                Patch<span style={{ background: 'linear-gradient(135deg,#A855F7,#EC4899)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Line</span>
-              </div>
-              <div className="text-[10px] font-mono flex items-center gap-1.5"
-                style={{ color: '#22C55E' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-dot inline-block" />
-                Engine Online
-              </div>
+          <div
+            className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{
+              opacity: expanded ? 1 : 0,
+              maxWidth: expanded ? '160px' : '0px',
+              transform: expanded ? 'translateX(0)' : 'translateX(-8px)',
+            }}
+          >
+            <div className="font-sans font-bold text-[15px] tracking-tight"
+              style={{ color: 'var(--foreground)' }}>
+              Patch<span style={{ background: 'linear-gradient(135deg,#A855F7,#EC4899)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Line</span>
             </div>
-          )}
+            <div className="text-[10px] font-mono flex items-center gap-1.5"
+              style={{ color: '#22C55E' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-dot inline-block" />
+              Engine Online
+            </div>
+          </div>
         </Link>
       </div>
 
@@ -100,12 +105,21 @@ function SidebarContent({
               onClick={onNavigate}
               title={!expanded ? label : undefined}
               className={`pl-nav-item ${active ? 'active' : ''}`}
-              style={expanded ? {} : { justifyContent: 'center', padding: '8px', gap: 0 }}
             >
               <span className="pl-nav-icon shrink-0">
                 <Icon size={17} strokeWidth={1.7} />
               </span>
-              {expanded && <span className="text-[13px] font-medium truncate">{label}</span>}
+              <span
+                className="text-[13px] font-medium truncate transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{
+                  opacity: expanded ? 1 : 0,
+                  maxWidth: expanded ? '160px' : '0px',
+                  transform: expanded ? 'translateX(0)' : 'translateX(-6px)',
+                  display: 'inline-block',
+                }}
+              >
+                {label}
+              </span>
             </Link>
           );
         })}
@@ -120,28 +134,47 @@ function SidebarContent({
               marginTop: 8,
               border: '1px dashed rgba(234,179,8,0.35)',
               color: '#EAB308',
-              ...(expanded ? {} : { justifyContent: 'center', padding: '8px', gap: 0 }),
             }}
           >
             <CircleDot size={16} strokeWidth={2} className="shrink-0" />
-            {expanded && <span className="text-[13px] truncate">Finish Setup</span>}
+            <span
+              className="text-[13px] truncate transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{
+                opacity: expanded ? 1 : 0,
+                maxWidth: expanded ? '160px' : '0px',
+                transform: expanded ? 'translateX(0)' : 'translateX(-6px)',
+                display: 'inline-block',
+              }}
+            >
+              Finish Setup
+            </span>
           </Link>
         )}
       </nav>
 
       {/* Settings + bottom */}
-      <div className="px-2 pb-3 shrink-0 space-y-0.5" style={{ borderTop: '1px solid #1B1820', paddingTop: 8 }}>
+      <div className="px-2 pb-3 shrink-0 space-y-0.5" style={{ borderTop: '1px solid var(--border-divider)', paddingTop: 8 }}>
         <Link
           href="/onboarding"
           onClick={onNavigate}
           title={!expanded ? 'Settings' : undefined}
           className="pl-nav-item"
-          style={expanded ? {} : { justifyContent: 'center', padding: '8px', gap: 0 }}
         >
           <Settings size={17} strokeWidth={1.7} className="shrink-0" />
-          {expanded && <span className="text-[13px] font-medium">Settings</span>}
+          <span
+            className="text-[13px] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{
+              opacity: expanded ? 1 : 0,
+              maxWidth: expanded ? '160px' : '0px',
+              transform: expanded ? 'translateX(0)' : 'translateX(-6px)',
+              display: 'inline-block',
+            }}
+          >
+            Settings
+          </span>
         </Link>
       </div>
+
     </>
   );
 }

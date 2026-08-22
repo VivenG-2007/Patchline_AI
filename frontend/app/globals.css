@@ -510,7 +510,7 @@ html.light {
     font-size: 13px;
     font-weight: 500;
     color: var(--muted);
-    transition: all 0.15s ease;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -520,15 +520,16 @@ html.light {
     color: var(--foreground);
   }
   .pl-nav-item.active {
-    background: #19151F;
-    border: 1px solid #302537;
-    color: #FFFFFF;
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
+    background: var(--primary-soft);
+    border: 1px solid var(--border-active);
+    color: var(--foreground);
+    box-shadow: 0 0 12px var(--primary-glow);
   }
   .pl-nav-item.active .pl-nav-icon {
     color: var(--primary);
-    filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.60));
+    filter: drop-shadow(0 0 6px var(--primary-glow));
   }
+
 
   /* ── Input ── */
   .pl-input {
