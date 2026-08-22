@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { animate, motion, useMotionTemplate, useMotionValue } from 'motion/react';
+import { motion, useMotionTemplate } from 'motion/react';
 import { Canvas } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
 import { FiArrowRight } from 'react-icons/fi';
-
-const COLORS_TOP = ['#13FFAA', '#1E67C6', '#CE84CF', '#DD335C'];
+import { useAuroraColor } from '@/context/AuroraColorContext';
 
 export interface AuroraHeroProps {
   badgeText?: string;
@@ -30,17 +29,11 @@ export function AuroraHero({
   ctaHref,
 }: AuroraHeroProps) {
   const [mounted, setMounted] = useState(false);
-  const color = useMotionValue(COLORS_TOP[0]);
+  const color = useAuroraColor();
 
   useEffect(() => {
     setMounted(true);
-    animate(color, COLORS_TOP, {
-      ease: 'easeInOut',
-      duration: 10,
-      repeat: Infinity,
-      repeatType: 'mirror',
-    });
-  }, [color]);
+  }, []);
 
   const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, #020617 50%, ${color})`;
   const border = useMotionTemplate`1px solid ${color}`;
