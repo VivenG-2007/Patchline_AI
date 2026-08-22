@@ -2,10 +2,12 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Github as GithubIcon, Workflow, Check, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { Github as GithubIcon, Workflow, Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { githubApi, jiraApi, getConnectionStatus } from '@/lib/api';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -14,7 +16,7 @@ type Step = 1 | 2 | 3;
 const STEPS: { step: Step; label: string }[] = [
   { step: 1, label: 'GitHub' },
   { step: 2, label: 'Jira' },
-  { step: 3, label: 'Done' },
+  { step: 3, label: 'Ready' },
 ];
 
 function OnboardingInner() {
@@ -34,10 +36,6 @@ function OnboardingInner() {
     if (!authLoading && !user) router.push('/login');
   }, [authLoading, user, router]);
 
-  // On every load — including landing back here after an OAuth redirect —
-  // re-check both connections against the backend rather than trusting the
-  // URL alone, then use the ?step param (if present) or the connection
-  // state itself to decide which step to land on.
   useEffect(() => {
     if (!user) return;
     getConnectionStatus().then(({ githubConnected, jiraConnected }) => {
@@ -56,13 +54,12 @@ function OnboardingInner() {
       }
       setResolving(false);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, params]);
 
   if (authLoading || resolving) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center">
-        <div className="w-1.5 h-1.5 rounded-full bg-accent pulse-dot" />
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-accent-cyan pulse-dot" />
       </div>
     );
   }
@@ -74,88 +71,100 @@ function OnboardingInner() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas grid-overlay flex items-center justify-center px-6 py-16 relative">
+    <div className="min-h-screen bg-bg-base grid-overlay flex items-center justify-center px-4 sm:px-6 py-16 relative">
       <ThemeToggle className="absolute top-6 right-6" />
-      <div className="w-full max-w-md">
-        <div className="flex items-center gap-2 mb-10">
-          <span className="w-2 h-2 rounded-full bg-accent" />
-          <span className="font-display font-medium text-ink">Patchline</span>
-        </div>
 
-        {/* Sequential progress indicator — a real fixed order (GitHub, then
-            Jira), so numbering it is informative, not decorative. */}
+      <div className="w-full max-w-lg">
+        <Link href="/" className="flex items-center gap-2.5 mb-8 w-fit group">
+          <div className="w-8 h-8 rounded-xl bg-accent-cyan-soft border border-accent-cyan/30 flex items-center justify-center text-accent-cyan shadow-sm group-hover:scale-105 transition-transform">
+            <ShieldCheck size={18} strokeWidth={2.2} />
+          </div>
+          <span className="font-display font-bold text-xl text-text-primary">
+            PatchLine <span className="text-accent-cyan font-mono text-xs">AI</span>
+          </span>
+        </Link>
+
+        {/* Sequential Stepper */}
         <div className="flex items-center gap-2 mb-8">
           {STEPS.map(({ step: s, label }, i) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-mono shrink-0 border transition-colors ${
+                className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-mono shrink-0 border transition-all ${
                   step > s
-                    ? 'bg-success-soft border-success/40 text-success'
+                    ? 'bg-accent-emerald-soft border-accent-emerald text-accent-emerald'
                     : step === s
-                    ? 'bg-accent-soft border-accent text-accent-strong'
-                    : 'bg-surface border-border text-faint'
+                    ? 'bg-accent-cyan-soft border-accent-cyan text-accent-cyan font-bold ring-2 ring-accent-cyan/30'
+                    : 'bg-bg-subtle border-border-default text-text-muted'
                 }`}
               >
-                {step > s ? <Check size={12} /> : s}
+                {step > s ? <Check size={13} strokeWidth={2.5} /> : s}
               </div>
-              <span className={`text-xs ${step >= s ? 'text-ink' : 'text-faint'}`}>{label}</span>
-              {i < STEPS.length - 1 && <div className={`flex-1 h-px ${step > s ? 'bg-success/40' : 'bg-border'}`} />}
+              <span className={`text-xs font-mono ${step >= s ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
+                {label}
+              </span>
+              {i < STEPS.length - 1 && (
+                <div className={`flex-1 h-0.5 ${step > s ? 'bg-accent-emerald' : 'bg-border-default'}`} />
+              )}
             </div>
           ))}
         </div>
 
-        {oauthError && (
-          <Alert className="mb-6">Connection failed: {oauthError}</Alert>
-        )}
-        {justConnected && !oauthError && (
-          <Alert tone="success" className="mb-6">
-            {justConnected === 'github' ? 'GitHub' : 'Jira'} connected.
-          </Alert>
-        )}
+        <Card className="p-8 shadow-2xl">
+          {oauthError && (
+            <Alert className="mb-6">Connection failed: {oauthError}</Alert>
+          )}
+          {justConnected && !oauthError && (
+            <Alert tone="success" className="mb-6">
+              {justConnected === 'github' ? 'GitHub' : 'Jira'} connected successfully.
+            </Alert>
+          )}
 
-        {step === 1 && (
-          <StepCard
-            icon={GithubIcon}
-            eyebrow="Step 1 of 2"
-            title="Connect GitHub"
-            description="Patchline scans your repositories and opens pull requests once a fix is approved. It never sees your GitHub password, and the token is encrypted at rest."
-            connected={githubConnected}
-            connectHref={githubApi.connectUrl('/onboarding?step=2')}
-            connectLabel="Connect GitHub"
-            onSkip={() => goToStep(2)}
-            onContinue={() => goToStep(2)}
-          />
-        )}
+          {step === 1 && (
+            <StepCard
+              icon={GithubIcon}
+              eyebrow="Step 1 of 2 · Integration"
+              title="Connect GitHub Organization"
+              description="Patchline scans your repositories, checks AST syntax, and opens tested pull requests once fixes are approved."
+              connected={githubConnected}
+              connectHref={githubApi.connectUrl('/onboarding?step=2')}
+              connectLabel="Connect GitHub Account"
+              onSkip={() => goToStep(2)}
+              onContinue={() => goToStep(2)}
+            />
+          )}
 
-        {step === 2 && (
-          <StepCard
-            icon={Workflow}
-            eyebrow="Step 2 of 2"
-            title="Connect Jira"
-            description="Optional — Patchline can open a Jira ticket automatically when a scan finds something. Skip this if you don't use Jira."
-            connected={jiraConnected}
-            connectHref={jiraApi.connectUrl('/onboarding?step=3')}
-            connectLabel="Connect Jira"
-            onSkip={() => goToStep(3)}
-            onContinue={() => goToStep(3)}
-          />
-        )}
+          {step === 2 && (
+            <StepCard
+              icon={Workflow}
+              eyebrow="Step 2 of 2 · Ticketing"
+              title="Connect Atlassian Jira"
+              description="Optional — Patchline automatically creates tracked Jira issue tickets for discovered high-severity vulnerabilities."
+              connected={jiraConnected}
+              connectHref={jiraApi.connectUrl('/onboarding?step=3')}
+              connectLabel="Connect Jira Cloud"
+              onSkip={() => goToStep(3)}
+              onContinue={() => goToStep(3)}
+            />
+          )}
 
-        {step === 3 && (
-          <div>
-            <div className="w-10 h-10 rounded-lg bg-success-soft border border-success/30 flex items-center justify-center text-success mb-5">
-              <Check size={18} strokeWidth={2} />
+          {step === 3 && (
+            <div className="space-y-6">
+              <div className="w-12 h-12 rounded-xl bg-accent-emerald-soft border border-accent-emerald/30 flex items-center justify-center text-accent-emerald shadow-sm">
+                <Check size={22} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-text-primary">Workspace Ready</h1>
+                <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                  {githubConnected ? 'GitHub is active.' : "GitHub isn't connected yet — you can link repositories anytime from settings."}{' '}
+                  {jiraConnected ? 'Jira integration is enabled.' : 'Jira can be connected later if desired.'}
+                </p>
+              </div>
+              <Button onClick={() => router.push('/dashboard')} className="w-full py-2.5 font-mono text-xs gap-2">
+                Launch Security Dashboard <ArrowRight size={14} />
+              </Button>
             </div>
-            <h1 className="font-display text-2xl text-ink mb-2">You&apos;re set up</h1>
-            <p className="text-muted text-sm mb-6 leading-relaxed">
-              {githubConnected ? 'GitHub is connected.' : "GitHub isn't connected yet — you can add it later from the sidebar."}{' '}
-              {jiraConnected ? 'Jira is connected too.' : "Jira wasn't connected — that's fine, it's optional."}
-            </p>
-            <Button onClick={() => router.push('/dashboard')} className="w-full gap-2">
-              Go to dashboard <ArrowRight size={15} />
-            </Button>
-          </div>
-        )}
+          )}
+        </Card>
       </div>
     </div>
   );
@@ -183,30 +192,38 @@ function StepCard({
   onContinue: () => void;
 }) {
   return (
-    <div>
-      <span className="font-mono text-xs tracking-widest text-accent-strong uppercase">{eyebrow}</span>
-      <h1 className="font-display text-2xl mt-2 mb-2 text-ink">{title}</h1>
-      <p className="text-muted text-sm mb-7 leading-relaxed">{description}</p>
+    <div className="space-y-6">
+      <div>
+        <span className="font-mono text-xs uppercase tracking-wider text-accent-cyan font-semibold">
+          {eyebrow}
+        </span>
+        <h1 className="font-display text-2xl font-bold text-text-primary mt-1">{title}</h1>
+        <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">{description}</p>
+      </div>
 
       {connected ? (
-        <div className="flex items-center gap-2 text-success text-sm mb-4">
-          <Check size={15} /> Already connected
+        <div className="flex items-center gap-2 text-xs font-mono text-accent-emerald bg-accent-emerald-soft p-3 rounded-lg border border-accent-emerald/30">
+          <Check size={14} strokeWidth={2.5} /> Integration Active
         </div>
       ) : (
-        <a href={connectHref} className="block mb-4">
-          <Button className="w-full gap-2">
-            <Icon size={15} /> {connectLabel}
+        <a href={connectHref} className="block">
+          <Button className="w-full py-2.5 text-xs font-mono gap-2">
+            <Icon size={16} /> {connectLabel}
           </Button>
         </a>
       )}
 
       {connected ? (
-        <Button variant="secondary" onClick={onContinue} className="w-full">
-          Continue
+        <Button variant="secondary" onClick={onContinue} className="w-full py-2.5 text-xs font-mono">
+          Continue to Next Step
         </Button>
       ) : (
-        <button onClick={onSkip} className="text-sm text-muted hover:text-ink transition-colors w-full text-center py-2">
-          Skip for now
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-xs font-mono text-text-muted hover:text-text-primary transition-colors w-full text-center py-2"
+        >
+          Skip for now →
         </button>
       )}
     </div>
