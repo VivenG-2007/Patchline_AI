@@ -1,8 +1,8 @@
 FROM python:3.12-slim AS base
 WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    ENVIRONMENT=production
+  PYTHONUNBUFFERED=1 \
+  ENVIRONMENT=production
 
 FROM base AS deps
 COPY requirements.txt .
