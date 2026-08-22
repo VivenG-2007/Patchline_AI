@@ -80,36 +80,56 @@ export default function RagMemoryTrace({
               <p className="text-text-secondary text-xs">
                 Recalled <strong className="text-accent-cyan">{similarPastFixes.length} prior art match{similarPastFixes.length === 1 ? '' : 'es'}</strong> to guide patch synthesis:
               </p>
-              <div className="space-y-1.5 pl-2 border-l-2 border-accent-purple/40">
+              <div className="space-y-2 pl-2 border-l-2 border-accent-purple/40">
                 {similarPastFixes.map((item, i) => (
-                  <div key={i} className="text-xs bg-bg-subtle/80 p-2 rounded-lg border border-border-default space-y-1">
+                  <div
+                    key={i}
+                    className={`text-xs p-2 rounded-lg border space-y-1.5 ${
+                      item.verified
+                        ? 'bg-accent-emerald-soft/10 border-accent-emerald/30'
+                        : 'bg-accent-rose-soft/10 border-accent-rose/30'
+                    }`}
+                  >
+                    {/* Label row */}
                     <div className="flex flex-wrap items-center justify-between gap-1.5">
-                      <span className="text-text-primary font-medium truncate max-w-xs">
-                        &ldquo;{item.title}&rdquo;
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                          item.verified
+                            ? 'bg-accent-emerald-soft text-accent-emerald'
+                            : 'bg-accent-rose-soft text-accent-rose'
+                        }`}
+                      >
+                        {item.verified ? '✓ Verified Successful Patch' : '✗ Failed / Unverified — Strategy Avoided'}
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-accent-cyan-soft text-accent-cyan font-bold">
-                          {Math.round(item.similarity * 100)}% match
-                        </span>
-                        <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded ${
-                            item.verified
-                              ? 'bg-accent-emerald-soft text-accent-emerald'
-                              : 'bg-accent-rose-soft text-accent-rose'
-                          }`}
-                        >
-                          {item.verified ? 'Verified Fix' : 'Needs Review'}
-                        </span>
-                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent-cyan-soft text-accent-cyan font-bold">
+                        {Math.round(item.similarity * 100)}% match
+                      </span>
                     </div>
+                    {/* Finding title */}
+                    <div className="text-text-primary font-medium truncate">
+                      &ldquo;{item.title}&rdquo;
+                    </div>
+                    {/* File + category */}
                     {item.file && (
                       <div className="text-[11px] text-text-muted truncate">
-                        File: {item.file} {item.category ? `· ${item.category}` : ''}
+                        File: {item.file}{item.category ? ` · ${item.category}` : ''}
                       </div>
                     )}
+                    {/* Fix summary */}
                     {item.fixSummary && (
-                      <div className="text-[11px] text-text-secondary bg-bg-card p-1.5 rounded border border-border-default">
+                      <div className={`text-[11px] p-1.5 rounded border ${
+                        item.verified
+                          ? 'text-text-secondary bg-bg-card border-accent-emerald/20'
+                          : 'text-accent-rose/80 bg-bg-card border-accent-rose/20'
+                      }`}>
+                        <span className="font-semibold">{item.verified ? 'Strategy: ' : 'Failed strategy (do not repeat): '}</span>
                         {item.fixSummary}
+                      </div>
+                    )}
+                    {/* Directive note for failed items */}
+                    {!item.verified && (
+                      <div className="text-[10px] text-accent-rose/70 italic">
+                        ⚠ AI instructed to avoid repeating this patch strategy.
                       </div>
                     )}
                   </div>

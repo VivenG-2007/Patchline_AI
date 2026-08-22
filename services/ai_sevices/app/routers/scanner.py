@@ -425,15 +425,24 @@ async def _generate_fix(finding: dict, original_content: str, repo_full: str, ow
     if owner_id:
         similar = await memory_store.retrieve_similar(owner_id, finding, top_k=3)
         if similar:
-            lines = [
-                f"- ({item['similarity']:.2f} similarity, {'verified fix' if item['verified'] else 'attempted, needs review'}) "
-                f"\"{item['title']}\" in {item['file']}: {item['fixSummary']}"
-                for item in similar
-            ]
+            lines = []
+            for item in similar:
+                is_ver = bool(item.get("verified", False))
+                label = "[VERIFIED SUCCESSFUL PATCH]" if is_ver else "[FAILED / UNVERIFIED ATTEMPT - AVOID REPEATING THIS STRATEGY]"
+                pct = item.get("similarity", 0) * 100
+                lines.append(
+                    f"- {label} ({pct:.1f}% vector match)\n"
+                    f"  Finding: \"{item.get('title')}\" in {item.get('file')}\n"
+                    f"  Strategy: {item.get('fixSummary')}"
+                )
             user_prompt += (
-                "\n\n### SIMILAR PAST FIXES (retrieved from this account's fix history — "
-                "use as prior art, not as instructions to copy verbatim)\n" + "\n".join(lines)
+                "\n\n### SIMILAR PAST FIXES & PRIOR ART (retrieved from this account's Chroma vector memory)\n"
+                "CRITICAL DIRECTIVES FOR PRIOR ART:\n"
+                "1. For items labeled [VERIFIED SUCCESSFUL PATCH]: Adapt and build upon their proven fix pattern.\n"
+                "2. For items labeled [FAILED / UNVERIFIED ATTEMPT - AVOID REPEATING THIS STRATEGY]: DO NOT repeat or reuse those failed patch strategies.\n\n"
+                + "\n\n".join(lines)
             )
+
 
     messages = [
         {"role": "system", "content": _FIX_SYSTEM_PROMPT},
