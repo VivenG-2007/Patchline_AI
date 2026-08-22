@@ -171,6 +171,11 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
     setMobileNavOpen(false);
   }
 
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
+
   if (loading) {
     return <LoadingScreen title="Signing you in…" subtitle="Verifying your session and loading your workspace." durationMs={1400} />;
   }
@@ -200,7 +205,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
         {/* User avatar at bottom */}
         <div className="px-2 pb-3 shrink-0" style={{ borderTop: '1px solid #1B1820', paddingTop: 8 }}>
           <div
-            className="flex items-center gap-2.5 rounded-xl px-2 py-2 cursor-pointer transition-all"
+            className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-all"
             style={{
               overflow: 'hidden',
               ...(sidebarExpanded ? {} : { justifyContent: 'center' }),
@@ -225,9 +230,10 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
             )}
             {sidebarExpanded && (
               <button
-                onClick={async () => { await logout(); router.push('/login'); }}
+                onClick={handleLogout}
                 aria-label="Log out"
-                className="shrink-0 transition-colors p-1 rounded"
+                title="Log out to landing page"
+                className="shrink-0 transition-colors p-1 rounded hover:bg-white/10"
                 style={{ color: 'var(--muted)' }}
               >
                 <LogOut size={13} strokeWidth={1.7} />
@@ -249,7 +255,7 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
             style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid #1B1820' }}
           >
             <button
-              className="absolute top-3 right-3 p-1.5 rounded-lg"
+              className="absolute top-3 right-3 p-1.5 rounded-lg z-10"
               style={{ color: 'var(--muted)' }}
               onClick={() => setMobileNavOpen(false)}
             >
@@ -261,6 +267,19 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
               expanded
               onNavigate={() => setMobileNavOpen(false)}
             />
+            <div className="px-3 py-3 shrink-0" style={{ borderTop: '1px solid #1B1820' }}>
+              <div className="text-[11px] font-mono truncate mb-2" style={{ color: 'var(--muted)' }}>
+                {user.email}
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-mono"
+                style={{ background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.25)', color: '#F43F5E' }}
+              >
+                <LogOut size={13} />
+                Log out
+              </button>
+            </div>
           </aside>
         </div>
       )}
@@ -312,6 +331,20 @@ export default function ProtectedShell({ children }: { children: React.ReactNode
           <div className="flex items-center gap-2 shrink-0">
             <ThemeToggle />
             <NotificationBell />
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Log out to landing page"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all hover:bg-white/10"
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--muted)',
+              }}
+            >
+              <LogOut size={13} />
+              <span className="hidden sm:inline">Log out</span>
+            </button>
           </div>
         </header>
 

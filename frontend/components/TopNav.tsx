@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, ShieldCheck } from 'lucide-react';
+import { Menu, X, ShieldCheck, LogOut, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 
 const LINKS = [
@@ -13,6 +14,7 @@ const LINKS = [
 ];
 
 export default function TopNav() {
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,15 +75,40 @@ export default function TopNav() {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Link href="/login" className="text-xs font-mono text-text-secondary hover:text-text-primary transition-colors px-2">
-              Sign in
-            </Link>
-            <Link
-              href="/login?mode=register"
-              className="bg-accent-cyan text-white font-medium rounded-lg px-4 py-2 text-xs font-mono hover:bg-accent-cyan-strong transition-all shadow-sm active:scale-95"
-            >
-              Start Scanning
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-1.5 bg-accent-cyan text-white font-medium rounded-lg px-3.5 py-2 text-xs font-mono hover:bg-accent-cyan-strong transition-all shadow-sm active:scale-95"
+                >
+                  <LayoutDashboard size={14} />
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await logout();
+                  }}
+                  title="Log out"
+                  className="inline-flex items-center gap-1 text-xs font-mono text-text-secondary hover:text-accent-rose transition-colors px-2 py-1"
+                >
+                  <LogOut size={13} />
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-xs font-mono text-text-secondary hover:text-text-primary transition-colors px-2">
+                  Sign in
+                </Link>
+                <Link
+                  href="/login?mode=register"
+                  className="bg-accent-cyan text-white font-medium rounded-lg px-4 py-2 text-xs font-mono hover:bg-accent-cyan-strong transition-all shadow-sm active:scale-95"
+                >
+                  Start Scanning
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -118,20 +145,46 @@ export default function TopNav() {
               <ThemeToggle />
             </div>
             <div className="mt-auto space-y-3 pt-6">
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="block text-center border border-border-default rounded-xl py-3 text-xs font-mono text-text-primary bg-bg-card"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/login?mode=register"
-                onClick={() => setMobileOpen(false)}
-                className="block text-center bg-accent-cyan text-white rounded-xl py-3 text-xs font-mono font-medium shadow-md"
-              >
-                Start Scanning
-              </Link>
+              {user ? (
+                <>
+                  <div className="text-xs font-mono text-text-muted text-center truncate">
+                    {user.email}
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="block text-center bg-accent-cyan text-white rounded-xl py-3 text-xs font-mono font-medium shadow-md"
+                  >
+                    Go to Dashboard
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      setMobileOpen(false);
+                      await logout();
+                    }}
+                    className="w-full text-center border border-accent-rose/30 text-accent-rose rounded-xl py-3 text-xs font-mono bg-accent-rose-soft"
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block text-center border border-border-default rounded-xl py-3 text-xs font-mono text-text-primary bg-bg-card"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/login?mode=register"
+                    onClick={() => setMobileOpen(false)}
+                    className="block text-center bg-accent-cyan text-white rounded-xl py-3 text-xs font-mono font-medium shadow-md"
+                  >
+                    Start Scanning
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
