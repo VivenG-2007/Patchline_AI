@@ -12,7 +12,14 @@ function makeLimiter({ windowMs, limit, prefix }) {
     legacyHeaders: false,
     store: new RedisStore({
       prefix,
-      sendCommand: (...args) => redis.call(...args),
+      sendCommand: async (...args) => {
+        if (redis.status !== 'ready') return null;
+        try {
+          return await redis.call(...args);
+        } catch {
+          return null;
+        }
+      },
     }),
     passOnStoreError: true,
     message: { error: { message: 'Too many requests, slow down.', code: 'RATE_LIMITED' } },

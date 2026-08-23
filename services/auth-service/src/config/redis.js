@@ -10,11 +10,11 @@ const logger = require('./logger');
 const redis = new Redis(env.redisUrl, {
   maxRetriesPerRequest: null,
   enableOfflineQueue: false,
-  lazyConnect: false,
-  retryStrategy: (times) => Math.min(times * 500, 5000),
+  lazyConnect: true,
+  retryStrategy: (times) => Math.min(times * 1000, 10000),
 });
 
 redis.on('connect', () => logger.info('Redis connected (auth-service)'));
-redis.on('error', (err) => logger.error({ err }, 'Redis error — ioredis will retry automatically'));
+redis.on('error', (err) => logger.warn({ err: err.message }, 'Redis offline — continuing without cache'));
 
 module.exports = redis;
