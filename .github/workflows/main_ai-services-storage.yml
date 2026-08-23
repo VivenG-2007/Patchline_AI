@@ -1,0 +1,67 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Python app to Azure Web App - ai-services-storage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "services/ai_sevices/**"
+      - ".github/workflows/main_ai-services-storage.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create and start virtual environment
+        working-directory: services/ai_sevices
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app-ai-services-storage
+          path: services/ai_sevices
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app-ai-services-storage
+          path: services/ai_sevices
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AI || secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_AI || secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AI || secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'ai-services-storage'
+          slot-name: 'Production'
+          package: services/ai_sevices
