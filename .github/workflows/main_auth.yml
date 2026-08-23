@@ -66,3 +66,4 @@ jobs:
           app-name: 'auth'
           slot-name: 'Production'
           package: services/auth-service
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AUTH }}
