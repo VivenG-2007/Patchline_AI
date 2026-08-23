@@ -60,6 +60,24 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("elasticsearch_not_configured — search will use the Mongo fallback")
 
+    # Chroma Cloud backs the RAG "Remember" step — verify it's reachable at
+    # startup so a misconfigured API key surfaces immediately (as a warning,
+    # not a crash — RAG is best-effort and index_finding never blocks a scan).
+    from app.core import memory_store as _mem
+    if _mem.is_enabled():
+        try:
+            from app.core import chroma_client as _cc
+            await _cc.get_collection()
+            logger.info("chroma_ready", collection=settings.chroma_collection)
+        except Exception as exc:
+            logger.warning(
+                "chroma_unreachable_at_startup — RAG memory will be silently "
+                "skipped until resolved. Check CHROMA_API_KEY / CHROMA_HOST.",
+                error=str(exc),
+            )
+    else:
+        logger.info("rag_memory_disabled — set RAG_MEMORY_ENABLED=true to enable")
+
     # Periodic sweep for findings stuck in FIX_PROCESSING after a hard crash
     # (see app/services/reconciliation.py). Best-effort: if Mongo isn't
     # configured the loop's own db calls will just log and retry next

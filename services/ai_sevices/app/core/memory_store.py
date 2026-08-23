@@ -71,7 +71,11 @@ def _embedding_text(finding: dict) -> str:
         f"severity:{finding.get('severity') or ''}",
         f"file:{finding.get('file') or ''}",
     ]
-    return "\n".join(p for p in parts if p)
+    text = "\n".join(p for p in parts if p)
+    # Guard: if finding dict is entirely empty (e.g. record_fix_outcome fallback
+    # with no finding context), produce a descriptive placeholder so the vector
+    # isn't a near-zero-norm hash of an empty string.
+    return text or "unknown vulnerability finding"
 
 
 async def index_finding(owner_id: str, scan_id: str, repo: str, finding: dict) -> None:
@@ -240,6 +244,16 @@ async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list
         query_vector = await embeddings.embed(_embedding_text(finding))
         collection = await chroma_client.get_collection()
 
+        # Chroma raises if n_results > collection size — clamp to actual count
+        # so new deployments (few documents) don't log errors on every fix.
+        try:
+            total_docs = await asyncio.to_thread(collection.count)
+        except Exception:
+            total_docs = _QUERY_CANDIDATES
+        n_results = max(1, min(_QUERY_CANDIDATES, total_docs))
+        if total_docs == 0:
+            return []
+
         # ── Tier 1: Owner-scoped query ─────────────────────────────────────────
         if owner_id:
             for where_clause in [
@@ -250,7 +264,7 @@ async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list
                     result = await asyncio.to_thread(
                         collection.query,
                         query_embeddings=[query_vector],
-                        n_results=_QUERY_CANDIDATES,
+                        n_results=n_results,
                         where=where_clause,
                         include=["metadatas", "distances"],
                     )
@@ -273,7 +287,7 @@ async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list
             try:
                 kwargs: dict[str, Any] = {
                     "query_embeddings": [query_vector],
-                    "n_results": _QUERY_CANDIDATES,
+                    "n_results": n_results,
                     "include": ["metadatas", "distances"],
                 }
                 if where_clause is not None:

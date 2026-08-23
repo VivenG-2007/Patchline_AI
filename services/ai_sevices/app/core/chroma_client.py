@@ -17,6 +17,7 @@ request.
 from __future__ import annotations
 
 import asyncio
+import threading
 from typing import Optional
 
 import chromadb
@@ -27,36 +28,45 @@ from app.config import get_settings
 
 _client: Optional[ClientAPI] = None
 _collection: Optional[Collection] = None
+# Guards the singleton construction — two concurrent asyncio.to_thread calls
+# can both see _collection is None before either has finished building it,
+# causing duplicate CloudClient instances and double TLS handshakes.
+_lock = threading.Lock()
 
 
 def _build_client() -> ClientAPI:
     settings = get_settings()
     if not settings.chroma_api_key:
         raise RuntimeError("CHROMA_API_KEY is not configured")
-    # tenant/database may be None — CloudClient resolves them from the API
-    # key's scope as long as the key is scoped to a single database.
-    return chromadb.CloudClient(
-        tenant=settings.chroma_tenant or None,
-        database=settings.chroma_database or None,
-        api_key=settings.chroma_api_key,
-    )
+    kwargs: dict = {
+        "api_key": settings.chroma_api_key,
+        "tenant": settings.chroma_tenant or None,
+        "database": settings.chroma_database or None,
+    }
+    if settings.chroma_host:
+        kwargs["cloud_host"] = settings.chroma_host
+    return chromadb.CloudClient(**kwargs)
 
 
 def _get_collection_sync() -> Collection:
     global _client, _collection
+    # Double-checked locking: fast path avoids acquiring the lock on every
+    # call once the singleton is built.
     if _collection is not None:
         return _collection
-    settings = get_settings()
-    if _client is None:
-        _client = _build_client()
-    # "cosine" matches this pipeline's prior brute-force cosine-similarity
-    # behavior (the old app/services/embeddings.py:cosine_similarity path) —
-    # Chroma's HNSW index defaults to "l2" otherwise, which would silently
-    # change what "similar" means without this.
-    _collection = _client.get_or_create_collection(
-        name=settings.chroma_collection,
-        metadata={"hnsw:space": "cosine"},
-    )
+    with _lock:
+        if _collection is not None:
+            return _collection
+        if _client is None:
+            _client = _build_client()
+        # "cosine" matches this pipeline's prior brute-force cosine-similarity
+        # behavior (the old app/services/embeddings.py:cosine_similarity path) —
+        # Chroma's HNSW index defaults to "l2" otherwise, which would silently
+        # change what "similar" means without this.
+        _collection = _client.get_or_create_collection(
+            name=get_settings().chroma_collection,
+            metadata={"hnsw:space": "cosine"},
+        )
     return _collection
 
 
@@ -72,5 +82,6 @@ def reset() -> None:
     """Test-only: drop the cached client/collection so the next
     get_collection() call rebuilds them against current settings."""
     global _client, _collection
-    _client = None
-    _collection = None
+    with _lock:
+        _client = None
+        _collection = None

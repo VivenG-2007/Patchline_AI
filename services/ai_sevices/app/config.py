@@ -138,6 +138,7 @@ class Settings(BaseSettings):
     # CloudClient resolves them from the API key's scope as long as the key
     # is scoped to a single database.
     chroma_api_key: Optional[str] = None
+    chroma_host: str = "api.trychroma.com"   # override only for self-hosted Chroma
     chroma_tenant: Optional[str] = None
     chroma_database: Optional[str] = None
     chroma_collection: str = "finding_memory"

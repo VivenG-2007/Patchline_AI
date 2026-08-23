@@ -69,8 +69,22 @@ async def _azure_openai_embed(text: str) -> list[float]:
                 "EMBEDDING_PROVIDER=azure_openai"
             ),
         )
+    # Strip any path suffix someone may have pasted into AZURE_OPENAI_ENDPOINT
+    # (e.g. /openai/v1/responses from the Foundry UI) — same defensive stripping
+    # as azure_openai.py so both callers are resilient to the same copy-paste mistake.
     base = settings.azure_openai_endpoint.rstrip("/")
+    for suffix in (
+        "/openai/v1/responses",
+        "/openai/v1",
+        "/openai/deployments",
+    ):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)].rstrip("/")
+            break
     api_version = settings.azure_openai_api_version or "2024-12-01-preview"
+    # Standard Azure OpenAI Embeddings API (different from the Foundry Responses API
+    # used by chat — embeddings use the classic deployments path + api-key header,
+    # not /openai/v1/responses + Bearer).
     url = f"{base}/openai/deployments/{deployment}/embeddings?api-version={api_version}"
 
     async with httpx.AsyncClient(timeout=30.0) as client:
@@ -82,6 +96,7 @@ async def _azure_openai_embed(text: str) -> list[float]:
         resp.raise_for_status()
         data = resp.json()
     return data["data"][0]["embedding"]
+
 
 
 async def embed(text: str) -> list[float]:
