@@ -3,7 +3,7 @@ const env = require('./env');
 const logger = require('./logger');
 
 const redis = new Redis(env.redisUrl, {
-  maxRetriesPerRequest: 2,
+  maxRetriesPerRequest: null,
   lazyConnect: false,
   retryStrategy: (times) => Math.min(times * 200, 2000),
 });
