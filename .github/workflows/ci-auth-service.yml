@@ -6,25 +6,18 @@ on:
     paths:
       - "services/auth-service/**"
       - ".github/workflows/ci-auth-service.yml"
+
   pull_request:
     paths:
       - "services/auth-service/**"
       - ".github/workflows/ci-auth-service.yml"
-
-defaults:
-  run:
-    working-directory: services/auth-service
 
 jobs:
   test:
     name: Lint & test
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # rate-limit-redis (via src/config/redis.js, pulled in by src/app.js) opens
-    # a real ioredis connection the moment the app module is required — even
-    # test/health.test.js's smoke test needs a reachable Redis or it fails
-    # with MaxRetriesPerRequestError, so CI provides one the same way a real
-    # deployment would.
+
     services:
       redis:
         image: redis:7-alpine
@@ -35,6 +28,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+    defaults:
+      run:
+        working-directory: services/auth-service
 
     steps:
       - uses: actions/checkout@v4
