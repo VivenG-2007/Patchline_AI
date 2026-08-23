@@ -65,3 +65,4 @@ jobs:
           app-name: 'ai-services-storage'
           slot-name: 'Production'
           package: services/ai_sevices
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AI_SERVICES_STORAGE }}
