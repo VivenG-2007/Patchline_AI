@@ -44,6 +44,7 @@ jobs:
     needs: build
     permissions:
       contents: read
+      id-token: write # Required for Azure OIDC Federated Login
 
     steps:
       - name: Download artifact from build job
@@ -52,6 +53,13 @@ jobs:
           name: node-app-main
           path: services/main
 
+      - name: Login to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BE911E7DC7814A4384E42E22E8E067AB }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E5A4A92AE72B467F8C40D011EF320E8E }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3F21493950A04196B0D53952FA082F3C }}
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -59,4 +67,3 @@ jobs:
           app-name: 'main'
           slot-name: 'Production'
           package: services/main
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BE911E7DC7814A4384E42E22E8E067AB || secrets.AZUREAPPSERVICE_PUBLISHPROFILE_MAIN }}
