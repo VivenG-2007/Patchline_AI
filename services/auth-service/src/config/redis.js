@@ -9,7 +9,13 @@ const logger = require('./logger');
 // Node services behave identically under a Redis blip.
 const redis = new Redis(env.redisUrl, {
   maxRetriesPerRequest: null,
-  enableOfflineQueue: false,
+  // enableOfflineQueue defaults to true — commands issued before the
+  // connection is ready (e.g. SCRIPT LOAD from RedisStore's constructor,
+  // which runs at module-load time) are queued and flushed once the socket
+  // opens. Setting it to false caused an immediate rejection of that command
+  // and a startup crash. lazyConnect still prevents an eager TCP dial; the
+  // queue just holds the command until redis.connect() / redis.ping() fires
+  // in server.js.
   lazyConnect: true,
   retryStrategy: (times) => Math.min(times * 1000, 10000),
 });

@@ -12,14 +12,10 @@ function makeLimiter({ windowMs, limit, prefix }) {
     legacyHeaders: false,
     store: new RedisStore({
       prefix,
-      sendCommand: async (...args) => {
-        if (redis.status !== 'ready') return null;
-        try {
-          return await redis.call(...args);
-        } catch {
-          return null;
-        }
-      },
+      // Direct passthrough — if Redis is offline ioredis throws, and
+      // passOnStoreError below lets the request through instead of crashing.
+      // The previous null-guard broke rate-limit-redis's SCRIPT LOAD init.
+      sendCommand: (...args) => redis.call(...args),
     }),
     passOnStoreError: true,
     message: { error: { message: 'Too many requests, slow down.', code: 'RATE_LIMITED' } },

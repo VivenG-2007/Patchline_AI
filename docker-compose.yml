@@ -37,8 +37,8 @@ services:
         condition: service_healthy
 
   main-service:
-    build: ./services/main-service
-    env_file: ./services/main-service/.env
+    build: ./services/main
+    env_file: ./services/main/.env
     environment:
       - REDIS_URL=redis://redis:6379
       - AI_STORAGE_SERVICE_URL=http://ai-storage-service:5002
@@ -65,9 +65,9 @@ services:
   # service" for the equivalent Azure App Service setup and for guidance
   # on disabling main-service's inline workers once this is deployed.
   worker:
-    build: ./services/main-service
+    build: ./services/main
     command: ["node", "src/worker.js"]
-    env_file: ./services/main-service/.env
+    env_file: ./services/main/.env
     environment:
       - REDIS_URL=redis://redis:6379
       - AI_STORAGE_SERVICE_URL=http://ai-storage-service:5002

@@ -4,7 +4,10 @@ const logger = require('./logger');
 
 const redis = new Redis(env.redisUrl, {
   maxRetriesPerRequest: null,
-  enableOfflineQueue: false,
+  // enableOfflineQueue defaults to true — commands issued before the
+  // connection is ready (e.g. redis.ping() in server.js, which fires before
+  // the lazyConnect socket opens) are queued and flushed once connected.
+  // Setting it to false caused an immediate rejection and a startup crash.
   lazyConnect: true,
   retryStrategy: (times) => Math.min(times * 1000, 10000),
 });

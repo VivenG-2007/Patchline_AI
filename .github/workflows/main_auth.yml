@@ -1,15 +1,10 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
+# DISABLED: This Azure-generated workflow deployed without running tests and
+# raced against ci-auth-service.yml (which lints, tests, then deploys via OIDC).
+# Kept as workflow_dispatch-only emergency fallback — use ci-auth-service.yml
+# for all normal deployments.
 name: Build and deploy Node.js app to Azure Web App - auth
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "services/auth-service/**"
-      - ".github/workflows/main_auth.yml"
   workflow_dispatch:
 
 jobs:

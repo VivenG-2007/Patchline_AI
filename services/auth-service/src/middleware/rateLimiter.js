@@ -16,14 +16,13 @@ function makeLimiter({ windowMs, limit, prefix, message }) {
     legacyHeaders: false,
     store: new RedisStore({
       prefix,
-      sendCommand: async (...args) => {
-        if (redis.status !== 'ready') return null;
-        try {
-          return await redis.call(...args);
-        } catch {
-          return null;
-        }
-      },
+      // Pass commands straight through to ioredis. If Redis is offline,
+      // ioredis throws, rate-limit-redis catches it, and passOnStoreError
+      // below lets the request through instead of crashing. Returning null
+      // was causing "unexpected reply from redis client" at startup because
+      // rate-limit-redis runs SCRIPT LOAD during initialisation and cannot
+      // handle a null response.
+      sendCommand: (...args) => redis.call(...args),
     }),
     passOnStoreError: true,
     message: { error: { message, code: 'RATE_LIMITED' } },
