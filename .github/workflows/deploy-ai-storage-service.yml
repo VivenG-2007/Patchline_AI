@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "services/ai-storage-service/**"
+      - "services/ai_sevices/**"
       - ".github/workflows/deploy-ai-storage-service.yml"
   workflow_dispatch: {}
 
 defaults:
   run:
-    working-directory: services/ai-storage-service
+    working-directory: services/ai_sevices
 
 permissions:
   id-token: write   # required for Azure OIDC federated login
@@ -32,8 +32,8 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: |
-            services/ai-storage-service/requirements.txt
-            services/ai-storage-service/requirements-dev.txt
+            services/ai_sevices/requirements.txt
+            services/ai_sevices/requirements-dev.txt
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: ruff check app tests
       - run: pytest -q
@@ -57,7 +57,7 @@ jobs:
       - name: Build & push image
         uses: docker/build-push-action@v6
         with:
-          context: services/ai-storage-service
+          context: services/ai_sevices
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.sha }}

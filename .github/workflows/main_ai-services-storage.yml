@@ -1,7 +1,6 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# Docs for Azure Web App for Containers: https://github.com/Azure/webapps-deploy
 
-name: Build and deploy Python app to Azure Web App - ai-services-storage
+name: Build and deploy Container to Azure Web App - ai-services-storage
 
 on:
   push:
@@ -12,57 +11,48 @@ on:
       - ".github/workflows/main_ai-services-storage.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}/ai-services-storage
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          python-version: '3.11'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and start virtual environment
-        working-directory: services/ai_sevices
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - name: Build & push Docker image
+        uses: docker/build-push-action@v6
         with:
-          name: python-app-ai-services-storage
-          path: services/ai_sevices
+          context: services/ai_sevices
+          file: services/ai_sevices/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app-ai-services-storage
-          path: services/ai_sevices
-
-      - name: Login to Azure
+      - name: Azure login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BE911E7DC7814A4384E42E22E8E067AB }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E5A4A92AE72B467F8C40D011EF320E8E }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3F21493950A04196B0D53952FA082F3C }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BE911E7DC7814A4384E42E22E8E067AB || secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E5A4A92AE72B467F8C40D011EF320E8E || secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3F21493950A04196B0D53952FA082F3C || secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'ai-services-storage'
-          slot-name: 'Production'
-          package: services/ai_sevices
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AI_SERVICES_STORAGE }}
+      - name: Deploy Container Image to Azure Web App
+        run: |
+          az webapp config container set \
+            --name ai-services-storage \
+            --container-image-name "${{ env.IMAGE_NAME }}:${{ github.sha }}" \
+            --container-registry-url https://ghcr.io
