@@ -21,7 +21,7 @@ const DEFAULT_FEATURES: FeatureItem[] = [
   },
   {
     icon: Sparkles,
-    title: 'GPT-5.2 Patch Synthesis',
+    title: 'GPT-4.1 mini Patch Synthesis',
     description: 'Generates secure, isolated fix candidates directly on dedicated PR branches with zero context pollution.',
     tag: 'Stage 5-6',
   },

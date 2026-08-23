@@ -105,7 +105,7 @@ export default function FindingCard({
       addToast({
         type: 'info',
         title: 'Remediation Authorized',
-        message: `Dispatching GPT-5.2 patch synthesis and GPT-5.3 verification for ${finding.id}.`,
+        message: `Dispatching GPT-4.1 mini patch synthesis and verification for ${finding.id}.`,
       });
     } catch (err: any) {
       addToast({
@@ -241,7 +241,7 @@ export default function FindingCard({
           ) : isFixing ? (
             <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-bg-subtle border border-accent-cyan/40 text-accent-cyan font-mono text-xs">
               <Loader2 size={14} className="animate-spin" />
-              <span>GPT-5.2 Synthesizing…</span>
+              <span>GPT-4.1 mini Synthesizing…</span>
             </div>
           ) : (
             <div className="flex flex-col sm:items-end gap-1">
@@ -273,15 +273,15 @@ export default function FindingCard({
         </div>
       </div>
 
-      {/* ────────────────── Active Fix Details: GPT-5.2 Synthesis & GPT-5.3 Verification ────────────────── */}
+      {/* ────────────────── Active Fix Details: GPT-4.1 mini Synthesis & Verification ────────────────── */}
       {(isFixing || isSettled || fixStatus?.summary || fixStatus?.fixBranch) && (
         <div className="pt-3 border-t border-border-default space-y-3">
-          {/* GPT-5.2 Fix Synthesis Card */}
+          {/* GPT-4.1 mini Fix Synthesis Card */}
           <div className="rounded-xl border border-accent-purple/30 bg-bg-subtle/70 p-3.5 space-y-2 font-mono text-xs">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-default/60 pb-2">
               <div className="flex items-center gap-1.5 text-accent-purple font-semibold">
                 <Cpu size={14} />
-                <span>GPT-5.2 Patch Synthesizer</span>
+                <span>GPT-4.1 mini Patch Synthesizer</span>
               </div>
               {fixStatus?.fixBranch && (
                 <div className="flex items-center gap-1 text-[11px] text-text-muted bg-bg-card px-2 py-0.5 rounded border border-border-default">
@@ -296,7 +296,7 @@ export default function FindingCard({
             </p>
           </div>
 
-          {/* GPT-5.3 Evaluated / Verification Card */}
+          {/* GPT-4.1 mini Evaluated / Verification Card */}
           {(isVerified || isNeedsReview || isSettled || fixStatus?.details) && (
             <div className={`rounded-xl border p-3.5 space-y-2 font-mono text-xs ${
               isVerified
@@ -306,7 +306,7 @@ export default function FindingCard({
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-default/60 pb-2">
                 <div className="flex items-center gap-1.5 font-semibold text-text-primary">
                   <ShieldCheck size={14} className={isVerified ? 'text-accent-emerald' : 'text-accent-amber'} />
-                  <span>GPT-5.3 Evaluator &amp; AST Re-scanner</span>
+                  <span>GPT-4.1 mini Evaluator &amp; AST Re-scanner</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] px-2 py-0.5 rounded bg-bg-card border border-border-default font-bold text-accent-cyan">
@@ -323,7 +323,7 @@ export default function FindingCard({
               </div>
 
               <div className="text-text-secondary text-xs leading-relaxed">
-                {fixStatus?.details || 'Deterministic AST re-scanner and GPT-5.3 code model independently verified 0 regression defects introduced in post-fix code.'}
+                {fixStatus?.details || 'Deterministic AST re-scanner and GPT-4.1 mini code model independently verified 0 regression defects introduced in post-fix code.'}
               </div>
 
               {fixStatus?.pullRequest && (
@@ -382,7 +382,7 @@ export default function FindingCard({
           <div className="mt-3 rounded-xl bg-terminal-bg border border-white/10 p-4 font-mono text-xs overflow-x-auto animate-fade-rise-in">
             <div className="text-[11px] text-terminal-muted pb-2 border-b border-white/10 mb-2 flex items-center justify-between">
               <span>patchline_remediation.diff</span>
-              <span className="text-accent-cyan">GPT-5.2 Synthesized</span>
+              <span className="text-accent-cyan">GPT-4.1 mini Synthesized</span>
             </div>
             <pre className="text-terminal-text leading-relaxed">
               {defaultDiff.split('\n').map((line, idx) => {

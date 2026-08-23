@@ -131,7 +131,7 @@ export default function ScanHistoryPage() {
       <PageHeader
         eyebrow="Azure Blob · MongoDB Telemetry"
         title="Audit Logs &amp; Scan History"
-        description="Comprehensive historical ledger of all deterministic SAST scans, GPT-5.2 patches, and regression verification passes."
+        description="Comprehensive historical ledger of all deterministic SAST scans, GPT-4.1 mini patches, and regression verification passes."
         action={
           <Link href="/scanner">
             <Button size="sm" className="gap-1.5 font-mono">

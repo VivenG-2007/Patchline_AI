@@ -16,7 +16,7 @@ const DEFAULT_STEPS = [
   'Authenticating workspace credentials…',
   'Connecting to Elasticsearch telemetry node…',
   'Resolving multi-repo compliance rules…',
-  'Loading AST scanner & GPT-5.2 pipeline…',
+  'Loading AST scanner & GPT-4.1 mini pipeline…',
   'Workspace ready',
 ];
 

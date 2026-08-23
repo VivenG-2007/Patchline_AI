@@ -37,11 +37,11 @@ const TIERS: PricingTier[] = [
     name: 'Pro Team',
     price: '$49',
     period: 'per seat / month',
-    description: 'Autonomous GPT-5.2 patch synthesis with human-approval gates for high-velocity teams.',
+    description: 'Autonomous GPT-4.1 mini patch synthesis with human-approval gates for high-velocity teams.',
     recommended: true,
     features: [
       'Unlimited Monitored Repos',
-      'Autonomous GPT-5.2 Fix Synthesis',
+      'Autonomous GPT-4.1 mini Fix Synthesis',
       'Deterministic Regression Testing',
       'Automated GitHub PR Dispatch',
       'Atlassian Jira Issue Sync',

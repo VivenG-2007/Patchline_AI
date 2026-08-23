@@ -46,7 +46,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="mt-6 text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto font-sans">
-            Autonomous vulnerability discovery, GPT-5.2 isolated patch synthesis, and deterministic regression verification for modern engineering teams.
+            Autonomous vulnerability discovery, GPT-4.1 mini isolated patch synthesis, and deterministic regression verification for modern engineering teams.
           </p>
 
           <div className="mt-9 flex items-center justify-center gap-4 flex-wrap">

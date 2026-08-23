@@ -36,7 +36,7 @@ export default function AuroraShowcasePage() {
               Decrease vulnerability dwell time by over <span className="text-white font-bold">90%</span>
             </>
           }
-          description="Autonomous AST syntax discovery, GPT-5.2 isolated patch synthesis, and deterministic regression certification for modern engineering workflows."
+          description="Autonomous AST syntax discovery, GPT-4.1 mini isolated patch synthesis, and deterministic regression certification for modern engineering workflows."
           ctaText="Start Free Security Scan"
           ctaHref="/login?mode=register"
         />

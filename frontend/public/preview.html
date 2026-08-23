@@ -261,7 +261,7 @@
         <div class="mt-5 p-4 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-default)]" id="stage-inspector">
           <div class="flex items-center justify-between mb-2">
             <span class="font-display font-semibold text-sm text-[var(--text-primary)]" id="inspector-title">Stage 5: AI Semantic Analysis</span>
-            <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-default)] text-[var(--accent-cyan)]" id="inspector-engine">GPT-5.2 Contextual Reasoner</span>
+            <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-default)] text-[var(--accent-cyan)]" id="inspector-engine">GPT-4.1 mini AI Engine</span>
           </div>
           <p class="text-xs text-[var(--text-secondary)] mb-3" id="inspector-desc">Deep semantic analysis, exploitability validation, and false-positive pruning.</p>
           <div class="p-3 rounded-lg bg-[var(--terminal-bg)] border border-white/10 font-mono text-xs text-slate-300 space-y-1" id="inspector-logs">
@@ -358,7 +358,7 @@
             <div class="absolute -left-[31px] top-0.5 w-7 h-7 rounded-full bg-[var(--accent-purple)] text-white flex items-center justify-center font-bold text-xs">2</div>
             <div>
               <div class="font-display font-semibold text-sm text-[var(--text-primary)]">Stage 2: Fix Synthesized</div>
-              <p class="text-xs text-[var(--text-secondary)] mt-0.5">GPT-5.2 synthesized parameterized query replacement on isolated branch fix/patchline-cwe89.</p>
+              <p class="text-xs text-[var(--text-secondary)] mt-0.5">GPT-4.1 mini synthesized parameterized query replacement on isolated branch fix/patchline-cwe89.</p>
             </div>
           </div>
 
@@ -403,7 +403,7 @@
       { id: 2, name: 'Scanning', engine: 'Git Sparse Checkout', desc: 'Cloning workspace files and traversing tree.', logs: ['Indexed 142 source files', 'Resolved submodule dependencies'] },
       { id: 3, name: 'Parsing', engine: 'Tree-Sitter AST Engine', desc: 'Constructing Abstract Syntax Trees for all modules.', logs: ['Parsed JavaScript & Python modules', 'Symbol table initialized'] },
       { id: 4, name: 'SAST', engine: 'Semgrep Core Ruleset', desc: 'Executing deterministic OWASP rulesets.', logs: ['Executed 248 security rules', 'Flagged CWE-89 pattern sink'] },
-      { id: 5, name: 'AI Analysis', engine: 'GPT-5.2 Contextual Reasoner', desc: 'Deep semantic analysis, exploitability validation, and false-positive pruning.', logs: ['Evaluated taint propagation graph', 'Confirmed true-positive flaw (98.4%)'] },
+      { id: 5, name: 'AI Analysis', engine: 'GPT-4.1 mini Contextual Reasoner', desc: 'Deep semantic analysis, exploitability validation, and false-positive pruning.', logs: ['Evaluated taint propagation graph', 'Confirmed true-positive flaw (98.4%)'] },
       { id: 6, name: 'Fix Synthesis', engine: 'Codex-5.3 Patch Generator', desc: 'Synthesizing isolated patch unified diff.', logs: ['Spawned branch fix/patchline-cwe89', 'Synthesized parameterized diff'] },
       { id: 7, name: 'Regression', engine: 'AST Deterministic Re-scanner', desc: 'Certifying 0 regressions introduced.', logs: ['Re-ran security ruleset pass', '0 regressions certified'] },
       { id: 8, name: 'Ready', engine: 'Patchline Gatekeeper', desc: 'Human authorization gate armed.', logs: ['Blob artifact uploaded to Azure', 'Awaiting human authorization'] }

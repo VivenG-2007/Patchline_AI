@@ -17,7 +17,7 @@ export default function AuroraHeroDemoPage() {
           Autonomous Vulnerability <span className="text-white">Remediation</span>
         </>
       }
-      description="Find security flaws, synthesize isolated GPT-5.2 patches, certify zero regressions, and open verified GitHub Pull Requests in minutes."
+      description="Find security flaws, synthesize isolated GPT-4.1 mini patches, certify zero regressions, and open verified GitHub Pull Requests in minutes."
       ctaText="Launch Free Scanner"
       ctaHref="/login?mode=register"
     />

@@ -42,7 +42,7 @@ export function AuroraFooter() {
               </span>
             </Link>
             <p className="text-xs text-gray-400 max-w-sm leading-relaxed">
-              Autonomous vulnerability discovery, GPT-5.2 patch synthesis, and deterministic AST regression certification.
+              Autonomous vulnerability discovery, GPT-4.1 mini patch synthesis, and deterministic AST regression certification.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a href="https://github.com" target="_blank" rel="noreferrer" className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors">

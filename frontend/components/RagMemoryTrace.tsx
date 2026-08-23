@@ -27,7 +27,7 @@ export interface RagMemoryTraceProps {
 /**
  * Traces the Chroma Cloud RAG memory pipeline for this finding:
  *   1. Recall — Semantic similarity search across historical finding/fix vectors
- *   2. Augment — Prior art injected into GPT-5.2 patch prompt
+ *   2. Augment — Prior art injected into GPT-4.1 mini patch prompt
  *   3. Remember — Verified outcome indexed back to Chroma vector collection
  */
 export default function RagMemoryTrace({
@@ -149,11 +149,11 @@ export default function RagMemoryTrace({
         <div className="flex items-start gap-2.5 pt-2 border-t border-border-default/60">
           <Sparkles size={14} className={`mt-0.5 shrink-0 ${recalling ? 'text-accent-cyan animate-pulse' : 'text-accent-purple'}`} />
           <div className="flex-1 min-w-0">
-            <div className="text-text-primary font-semibold text-xs">Step 2: GPT-5.2 Prompt Context Augmentation</div>
+            <div className="text-text-primary font-semibold text-xs">Step 2: GPT-4.1 mini Prompt Context Augmentation</div>
             <p className="text-text-muted text-xs mt-0.5">
               {hasSimilar
                 ? 'Synthesizer prompt injected with verified AST transformations from prior art.'
-                : 'Zero-shot high-context remediation prompt dispatched to GPT-5.2 engine.'}
+                : 'Zero-shot high-context remediation prompt dispatched to GPT-4.1 mini engine.'}
             </p>
           </div>
         </div>

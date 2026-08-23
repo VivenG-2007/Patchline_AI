@@ -352,7 +352,7 @@ function ScannerView() {
       [findingId]: {
         phase: 'PROCESSING',
         attempts: (prev[findingId]?.attempts || 0) + 1,
-        summary: 'GPT-5.2 synthesizing minimal, syntax-accurate patch on isolated branch…',
+        summary: 'GPT-4.1 mini synthesizing minimal, syntax-accurate patch on isolated branch…',
         ragMemoryEnabled: scanResult?.ragMemoryEnabled ?? true,
       },
     }));
@@ -381,7 +381,7 @@ function ScannerView() {
                   phase: fixData.status === 'FIX_VERIFIED' ? 'VERIFIED' : fixData.status === 'FIX_NEEDS_REVIEW' ? 'NEEDS_REVIEW' : 'FAILED',
                   fixBranch: fixData.fixBranch || `fix/patchline-${findingId.toLowerCase()}`,
                   summary: fixData.summary || 'Neutralized vulnerability by parameterizing user-supplied arguments in AST.',
-                  details: fixData.details || 'Deterministic rescan: rule no longer matches. GPT-5.3 confirmed 0 regressions.',
+                  details: fixData.details || 'Deterministic rescan: rule no longer matches. GPT-4.1 mini confirmed 0 regressions.',
                   pullRequest: fixData.pullRequest || { number: 42, url: `https://github.com/${repoInput}/pull/42` },
                   error: fixData.error,
                   attempts: fixData.attempts || (prev[findingId]?.attempts || 1),
@@ -413,7 +413,7 @@ function ScannerView() {
               phase: 'VERIFIED',
               fixBranch: `fix/patchline-${findingId.toLowerCase()}`,
               summary: 'Neutralized vulnerability by parameterizing user-supplied arguments in AST.',
-              details: 'Deterministic rescan confirmed pattern rule no longer matches. GPT-5.3 evaluated 0 regressions.',
+              details: 'Deterministic rescan confirmed pattern rule no longer matches. GPT-4.1 mini evaluated 0 regressions.',
               pullRequest: {
                 number: 42,
                 url: `https://github.com/${repoInput}/pull/42`,
@@ -459,7 +459,7 @@ function ScannerView() {
     addToast({
       type: 'success',
       title: `Batch AI Fix Triggered (${unfixed.length} vulnerabilities)`,
-      message: `Synthesizing GPT-5.2 patches for ${unfixed.length} vulnerability findings simultaneously.`,
+      message: `Synthesizing GPT-4.1 mini patches for ${unfixed.length} vulnerability findings simultaneously.`,
     });
     for (const f of unfixed) {
       handleApproveAndFix(f.id);
@@ -479,7 +479,7 @@ function ScannerView() {
             Autonomous Vulnerability Scanner
           </h1>
           <p className="text-text-secondary text-sm mt-1">
-            Execute 8-stage deterministic SAST + GPT-5.2 patch synthesis with GPT-5.3 verification.
+            Execute 8-stage deterministic SAST + GPT-4.1 mini patch synthesis & verification.
           </p>
         </div>
 
@@ -589,7 +589,7 @@ function ScannerView() {
                 <span>Identified Flaws ({scanResult.findings.length})</span>
               </h2>
               <p className="text-xs text-text-muted mt-0.5">
-                Each flaw is isolated and ready for human-authorized GPT-5.2 patch synthesis and GPT-5.3 verification.
+                Each flaw is isolated and ready for human-authorized GPT-4.1 mini patch synthesis & verification.
               </p>
             </div>
 
