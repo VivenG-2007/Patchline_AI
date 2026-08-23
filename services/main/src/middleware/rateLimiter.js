@@ -14,6 +14,7 @@ function makeLimiter({ windowMs, limit, prefix }) {
       prefix,
       sendCommand: (...args) => redis.call(...args),
     }),
+    passOnStoreError: true,
     message: { error: { message: 'Too many requests, slow down.', code: 'RATE_LIMITED' } },
   });
 }

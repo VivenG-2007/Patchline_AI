@@ -18,6 +18,7 @@ function makeLimiter({ windowMs, limit, prefix, message }) {
       prefix,
       sendCommand: (...args) => redis.call(...args),
     }),
+    passOnStoreError: true,
     message: { error: { message, code: 'RATE_LIMITED' } },
   });
 }

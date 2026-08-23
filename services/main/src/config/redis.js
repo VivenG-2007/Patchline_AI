@@ -4,8 +4,9 @@ const logger = require('./logger');
 
 const redis = new Redis(env.redisUrl, {
   maxRetriesPerRequest: null,
+  enableOfflineQueue: false,
   lazyConnect: false,
-  retryStrategy: (times) => Math.min(times * 200, 2000),
+  retryStrategy: (times) => Math.min(times * 500, 5000),
 });
 
 redis.on('connect', () => logger.info('Redis connected (main-service)'));
