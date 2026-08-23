@@ -14,13 +14,19 @@ module adds that.
     and verified — the fix outcome, all as point metadata. No separate
     MongoDB collection for this: Chroma is the source of truth for both the
     vector and the metadata it's retrieved with.
-  - Similarity search: Chroma's own HNSW ANN index, scoped server-side to one
-    owner's findings that already have a recorded fix via a `where` filter
-    (ownerId + hasFix) on the query itself — no need to pull candidates into
-    this process to score them, unlike a brute-force scan.
+  - Similarity search: two-pass Chroma HNSW query:
+      Pass 1 — owner-scoped (ownerId + hasFix=True): best signal, same team.
+      Pass 2 — community fallback (hasFix=True only): fires when pass 1
+        returns 0 above-threshold results. Ensures the pipeline provides
+        value from the very first fix a new user generates.
+  - Minimum similarity threshold (MIN_SIMILARITY_THRESHOLD=0.35 cosine):
+    Chroma always returns n_results candidates regardless of distance.
+    Without this gate a 10% match would be injected as "prior art" and
+    actively mislead the fix model. Items below threshold are discarded
+    silently before the prompt is built.
   - Degrades like es_client.py: disabled via RAG_MEMORY_ENABLED, or any
-    embedding/Chroma failure, only logs a warning and returns — it can never
-    fail a scan or a fix.
+    embedding/Chroma failure, only logs a warning and returns [] — it can
+    never fail a scan or a fix.
 """
 
 from __future__ import annotations
@@ -35,6 +41,18 @@ from app.core.logging import get_logger
 from app.services import embeddings
 
 logger = get_logger()
+
+# Minimum cosine similarity (after 1-distance conversion) required for a
+# Chroma result to be included in the fix prompt. Chroma always returns
+# n_results candidates regardless of distance — without this gate a 10%
+# similarity match would be injected as "prior art". 0.35 is conservative;
+# raise towards 0.6 if you see noise, lower towards 0.2 if valid matches
+# are being excluded. Check `memory_retrieve_owner_scoped` log lines to tune.
+MIN_SIMILARITY_THRESHOLD = 0.35
+
+# How many raw candidates to pull per Chroma query. Larger than the final
+# top_k so the threshold filter has a pool to work with.
+_QUERY_CANDIDATES = 8
 
 
 def is_enabled() -> bool:
@@ -119,6 +137,12 @@ async def record_fix_outcome(
             metadata["fixVerificationMethod"] = method
             metadata["fixRecordedAt"] = datetime.datetime.utcnow().isoformat() + "Z"
             await asyncio.to_thread(collection.update, ids=[doc_id], metadatas=[metadata])
+            logger.info(
+                "memory_record_fix_outcome_updated",
+                scan_id=scan_id,
+                finding_id=finding_id,
+                verified=verified,
+            )
         else:
             # Point missing — construct metadata and upsert into Chroma
             f_dict = finding or {}
@@ -145,43 +169,135 @@ async def record_fix_outcome(
                 embeddings=[vector],
                 metadatas=[metadata],
             )
-            logger.info("memory_record_fix_outcome_upserted", scan_id=scan_id, finding_id=finding_id)
+            logger.info(
+                "memory_record_fix_outcome_upserted",
+                scan_id=scan_id,
+                finding_id=finding_id,
+                verified=verified,
+            )
     except Exception as exc:  # noqa: BLE001
         logger.warning("memory_record_fix_outcome_failed", scan_id=scan_id, finding_id=finding_id, error=str(exc))
 
 
+def _score_results(metadatas: list, distances: list, source: str, top_k: int) -> list[dict[str, Any]]:
+    """Convert raw Chroma query results into scored, threshold-filtered items.
+    `source` is either 'owner' or 'community' — carried through to the prompt
+    so the fix model knows the provenance of each piece of prior art."""
+    items: list[dict[str, Any]] = []
+    for metadata, distance in zip(metadatas, distances):
+        similarity = round(max(0.0, min(1.0, 1.0 - distance)), 4)
+        if similarity < MIN_SIMILARITY_THRESHOLD:
+            continue
+        items.append(
+            {
+                "similarity": similarity,
+                "source": source,
+                "scanId": metadata.get("scanId"),
+                "findingId": metadata.get("findingId"),
+                "repo": metadata.get("repo"),
+                "title": metadata.get("title"),
+                "category": metadata.get("category"),
+                "severity": metadata.get("severity"),
+                "file": metadata.get("file"),
+                "fixSummary": metadata.get("fixSummary"),
+                "verified": bool(metadata.get("fixVerified", False)),
+            }
+        )
+    items.sort(key=lambda x: x["similarity"], reverse=True)
+    return items[:top_k]
+
+
 async def retrieve_similar(owner_id: str, finding: dict, top_k: int = 3) -> list[dict[str, Any]]:
-    """Semantic retrieval for the fix-generation prompt. Returns memory points with exact
-    similarity scores computed from ChromaDB vector distance."""
+    """Semantic retrieval for the fix-generation prompt.
+
+    Two-pass query strategy with minimum similarity threshold:
+
+    Pass 1 — owner-scoped (ownerId=$eq + hasFix=True):
+      Best signal — same owner's verified fixes, same codebase patterns.
+      If 0 results above MIN_SIMILARITY_THRESHOLD, fall through to pass 2.
+
+    Pass 2 — community fallback (hasFix=True only, no ownerId filter):
+      Fires when pass 1 returns nothing useful (new user, historical
+      NameError gap in record_fix_outcome, etc.). Labels results as
+      'community' so the prompt can distinguish them from 'owner' matches.
+
+    Items below MIN_SIMILARITY_THRESHOLD are always discarded. Chroma always
+    returns n_results candidates regardless of distance — without this gate
+    a 10% match would be injected as prior art and mislead the fix model.
+
+    All retrieval failures degrade to [] without raising.
+    """
     if not is_enabled():
         return []
+
+    if not owner_id:
+        logger.warning(
+            "memory_retrieve_similar_no_owner_id",
+            finding_id=finding.get("id"),
+            note="owner_id is empty — skipping owner-scoped query, going straight to community fallback",
+        )
+
     try:
         query_vector = await embeddings.embed(_embedding_text(finding))
         collection = await chroma_client.get_collection()
-        result = await asyncio.to_thread(
-            collection.query,
-            query_embeddings=[query_vector],
-            n_results=top_k,
-            where={"$and": [{"ownerId": {"$eq": owner_id}}, {"hasFix": {"$eq": True}}]},
-            include=["metadatas", "distances"],
-        )
-        metadatas = (result.get("metadatas") or [[]])[0]
-        distances = (result.get("distances") or [[]])[0]
-        items: list[dict[str, Any]] = []
-        for metadata, distance in zip(metadatas, distances):
-            similarity = round(max(0.0, min(1.0, 1.0 - distance)), 4)
-            items.append(
-                {
-                    "similarity": similarity,
-                    "title": metadata.get("title"),
-                    "category": metadata.get("category"),
-                    "severity": metadata.get("severity"),
-                    "file": metadata.get("file"),
-                    "fixSummary": metadata.get("fixSummary"),
-                    "verified": bool(metadata.get("fixVerified", False)),
-                }
-            )
-        return items
+
+        # ── Pass 1: owner-scoped ──────────────────────────────────────────────
+        owner_items: list[dict[str, Any]] = []
+        if owner_id:
+            try:
+                result = await asyncio.to_thread(
+                    collection.query,
+                    query_embeddings=[query_vector],
+                    n_results=_QUERY_CANDIDATES,
+                    where={"$and": [{"ownerId": {"$eq": owner_id}}, {"hasFix": {"$eq": True}}]},
+                    include=["metadatas", "distances"],
+                )
+                raw_meta = (result.get("metadatas") or [[]])[0]
+                raw_dist = (result.get("distances") or [[]])[0]
+                owner_items = _score_results(raw_meta, raw_dist, source="owner", top_k=top_k)
+                logger.info(
+                    "memory_retrieve_owner_scoped",
+                    finding_id=finding.get("id"),
+                    owner_id=owner_id,
+                    raw_candidates=len(raw_meta),
+                    above_threshold=len(owner_items),
+                    threshold=MIN_SIMILARITY_THRESHOLD,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "memory_retrieve_owner_scoped_failed",
+                    owner_id=owner_id,
+                    error=str(exc),
+                    note="falling back to community query",
+                )
+
+        # ── Pass 2: community fallback ────────────────────────────────────────
+        if not owner_items:
+            try:
+                result = await asyncio.to_thread(
+                    collection.query,
+                    query_embeddings=[query_vector],
+                    n_results=_QUERY_CANDIDATES,
+                    where={"hasFix": {"$eq": True}},
+                    include=["metadatas", "distances"],
+                )
+                raw_meta = (result.get("metadatas") or [[]])[0]
+                raw_dist = (result.get("distances") or [[]])[0]
+                community_items = _score_results(raw_meta, raw_dist, source="community", top_k=top_k)
+                logger.info(
+                    "memory_retrieve_community_fallback",
+                    finding_id=finding.get("id"),
+                    raw_candidates=len(raw_meta),
+                    above_threshold=len(community_items),
+                    threshold=MIN_SIMILARITY_THRESHOLD,
+                )
+                return community_items
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("memory_retrieve_community_failed", error=str(exc))
+                return []
+
+        return owner_items
+
     except Exception as exc:  # noqa: BLE001
         logger.warning("memory_retrieve_similar_failed", owner_id=owner_id, error=str(exc))
         return []
