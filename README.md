@@ -1,4 +1,4 @@
-# Patchline
+# Patchline.AI
 
 AI-reviewed vulnerability scanning with human-approved, tested pull requests. **1 Next.js frontend + 3 independent backend services**, wired together with JWT auth, Redis, Supabase, MongoDB, and Azure Blob Storage.
 
